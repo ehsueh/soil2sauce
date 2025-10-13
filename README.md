@@ -1,17 +1,40 @@
-# Sample Hardhat 3 Beta Project (`node:test` and `viem`)
+# Soil2Sauce - Web3 Panel-Based Farming Game
 
-This project showcases a Hardhat 3 Beta project using the native Node.js test runner (`node:test`) and the `viem` library for Ethereum interactions.
+A decentralized farming game built on Ethereum using Hardhat 3 and Solidity 0.8.28. This project is a Web3 reimagination of a traditional farming game, featuring on-chain game mechanics, ERC20 token economics, and true asset ownership.
 
-To learn more about the Hardhat 3 Beta, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3 Beta](https://hardhat.org/hardhat3-beta-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+## Overview
 
-## Project Overview
+Soil2Sauce is a blockchain-based farming simulation game where players:
+- Plant and harvest crops on their farm plots
+- Buy and manage animals that produce resources
+- Create custom dishes in a restaurant for passive income generation
+- Trade resources and earn game tokens (GCOIN)
 
-This example project includes:
+All game state and assets are stored on-chain, making them truly owned by players.
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using [`node:test`](nodejs.org/api/test.html), the new Node.js native test runner, and [`viem`](https://viem.sh/).
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+## Smart Contracts Architecture
+
+### GameToken (ERC20)
+- **Symbol**: GCOIN
+- **Purpose**: In-game currency for all transactions
+- **Features**: Mintable/burnable by authorized game contracts, starter tokens (100 GCOIN)
+
+### FarmLand
+Manages farm plots, planting, and harvesting mechanics.
+- 9 initial plots per player (expandable for 50 GCOIN)
+- 4 crop types: Wheat, Tomato, Strawberry, Carrot
+- Time-based crop growth, seed market, crop-to-seed conversion (1 crop → 2 seeds)
+
+### AnimalFarm
+Manages animals and their product generation.
+- Animals: Cow (100 GCOIN), Chicken (50 GCOIN)
+- Time-based product generation (Milk: 30s, Eggs: 20s)
+
+### Restaurant
+Manages custom dishes and passive income generation.
+- Create custom dishes with configurable revenue rates
+- Revenue generation every 60 seconds
+- Toggle dishes active/inactive
 
 ## Usage
 
@@ -30,28 +53,54 @@ npx hardhat test solidity
 npx hardhat test nodejs
 ```
 
-### Make a deployment to Sepolia
+### Deployment
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+Deploy all game contracts using Hardhat Ignition:
 
-To run the deployment to a local chain:
-
+**Local deployment:**
 ```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
+npx hardhat ignition deploy ignition/modules/Soil2Sauce.ts
 ```
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
-
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
-
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
-
+**Sepolia testnet:**
 ```shell
+# Set your private key
 npx hardhat keystore set SEPOLIA_PRIVATE_KEY
+
+# Deploy
+npx hardhat ignition deploy --network sepolia ignition/modules/Soil2Sauce.ts
 ```
 
-After setting the variable, you can run the deployment with the Sepolia network:
+## Game Mechanics
 
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
+### Crop Economics
+| Crop | Growth Time | Seed Price | Sell Price |
+|------|------------|------------|------------|
+| Wheat | 10s | 5 GCOIN | 4 GCOIN |
+| Tomato | 15s | 8 GCOIN | 6 GCOIN |
+| Strawberry | 12s | 10 GCOIN | 8 GCOIN |
+| Carrot | 8s | 6 GCOIN | 5 GCOIN |
+
+### Progression Loop
+1. Start with 100 GCOIN + 5 wheat seeds
+2. Plant → Harvest → Sell crops
+3. Buy more diverse seeds or animals
+4. Expand farm for more plots
+5. Create restaurant dishes for passive income
+6. Scale up operations
+
+## Technology Stack
+
+- **Blockchain**: Ethereum (EVM-compatible)
+- **Smart Contracts**: Solidity ^0.8.28
+- **Framework**: Hardhat 3
+- **Testing**: Node.js test runner + Viem
+- **Standards**: OpenZeppelin contracts
+
+## Original Game
+
+Inspired by the panel-based farming game in the `18--panel-based-farming-game` directory, reimagined for Web3 with blockchain mechanics and true asset ownership.
+
+## License
+
+MIT

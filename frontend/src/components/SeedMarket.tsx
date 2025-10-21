@@ -1,9 +1,23 @@
-import { useWriteContract } from 'wagmi';
-import { CONTRACT_ADDRESSES, CropType, CROP_EMOJIS } from '../wagmi';
+import { useEffect } from 'react';
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { CONTRACT_ADDRESSES, CropType, CROP_EMOJIS, getCropTypeName } from '../wagmi';
 import FarmLandABI from '../contracts/FarmLand.json';
+import { useRefresh } from '../RefreshContext';
 
 const SeedMarket = () => {
-  const { writeContract } = useWriteContract();
+  const { writeContract, data: hash } = useWriteContract();
+  const { triggerRefresh } = useRefresh();
+
+  const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  useEffect(() => {
+    if (isConfirmed) {
+      triggerRefresh();
+      setTimeout(() => triggerRefresh(), 500);
+    }
+  }, [isConfirmed, triggerRefresh]);
 
   const SEED_PRICES = {
     [CropType.WHEAT]: '5',
@@ -34,7 +48,7 @@ const SeedMarket = () => {
           return (
             <div key={type} className="market-item">
               <h3>
-                {emoji} {CropType[cropType]}
+                {emoji} {getCropTypeName(cropType)}
               </h3>
               <div className="price">{SEED_PRICES[cropType]} GCOIN</div>
               <div className="purchase-controls">

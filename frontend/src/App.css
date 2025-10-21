@@ -184,6 +184,7 @@ h1 {
   border: 2px solid #8B4513;
   border-radius: 8px;
   background: #F5F5DC;
+  color: #1a1a1a;
   cursor: pointer;
   font-size: 1rem;
   transition: all 0.3s ease;
@@ -300,4 +301,56 @@ h1 {
 
 .info p {
   margin-bottom: 0.5rem;
+}
+
+/* Inventory Styles */
+.inventory-section {
+  margin-bottom: 2rem;
+}
+
+.inventory-section h2 {
+  color: #2E8B57;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.inventory-item {
+  background: white;
+  border: 2px solid #2E8B57;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.inventory-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.inventory-item .item-icon {
+  font-size: 2rem;
+}
+
+.inventory-item .item-name {
+  flex: 1;
+  font-weight: 500;
+  color: #333;
+}
+
+.inventory-item .item-count {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #2E8B57;
+  background: #f0f8f0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
 }

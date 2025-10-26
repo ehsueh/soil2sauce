@@ -10,12 +10,17 @@ import AnimalMarket from './components/AnimalMarket';
 import Stable from './components/Stable';
 import Restaurant from './components/Restaurant';
 import BackKitchen from './components/BackKitchen';
+import PlayerRegistration from './components/PlayerRegistration';
+import RecipeResearch from './components/RecipeResearch';
+import RecipeEvaluation from './components/RecipeEvaluation';
+import Leaderboard from './components/Leaderboard';
 import { CONTRACT_ADDRESSES } from './wagmi';
 import GameTokenABI from './contracts/GameToken.json';
 import { formatUnits } from 'viem';
 import { RefreshProvider, useRefresh } from './RefreshContext';
 
 type Section =
+  | 'registration'
   | 'farming'
   | 'market'
   | 'inventory'
@@ -24,7 +29,10 @@ type Section =
   | 'animalMarket'
   | 'stable'
   | 'restaurant'
-  | 'backKitchen';
+  | 'backKitchen'
+  | 'recipeResearch'
+  | 'recipeEvaluation'
+  | 'leaderboard';
 
 function AppContent() {
   const [activeSection, setActiveSection] = useState<Section>('farming');
@@ -70,6 +78,8 @@ function AppContent() {
     }
 
     switch (activeSection) {
+      case 'registration':
+        return <PlayerRegistration />;
       case 'farming':
         return <FarmGrid />;
       case 'market':
@@ -88,8 +98,14 @@ function AppContent() {
         return <Restaurant />;
       case 'backKitchen':
         return <BackKitchen />;
+      case 'recipeResearch':
+        return <RecipeResearch />;
+      case 'recipeEvaluation':
+        return <RecipeEvaluation />;
+      case 'leaderboard':
+        return <Leaderboard />;
       default:
-        return <FarmGrid />;
+        return <PlayerRegistration />;
     }
   };
 
@@ -123,6 +139,17 @@ function AppContent() {
             </div>
           </div>
         )}
+        <div
+          className={`sidebar-section ${
+            activeSection === 'registration' ? 'active' : ''
+          }`}
+          onClick={() => setActiveSection('registration')}
+        >
+          <h3>👤 Profile</h3>
+        </div>
+
+        <div className="sidebar-divider">Farming</div>
+
         <div
           className={`sidebar-section ${
             activeSection === 'farming' ? 'active' : ''
@@ -179,6 +206,25 @@ function AppContent() {
         >
           <h3>🏠 Stable</h3>
         </div>
+
+        <div className="sidebar-divider">Cooking</div>
+
+        <div
+          className={`sidebar-section ${
+            activeSection === 'recipeResearch' ? 'active' : ''
+          }`}
+          onClick={() => setActiveSection('recipeResearch')}
+        >
+          <h3>🔬 Research Recipe</h3>
+        </div>
+        <div
+          className={`sidebar-section ${
+            activeSection === 'recipeEvaluation' ? 'active' : ''
+          }`}
+          onClick={() => setActiveSection('recipeEvaluation')}
+        >
+          <h3>🔍 Evaluate Recipe</h3>
+        </div>
         <div
           className={`sidebar-section ${
             activeSection === 'restaurant' ? 'active' : ''
@@ -194,6 +240,17 @@ function AppContent() {
           onClick={() => setActiveSection('backKitchen')}
         >
           <h3>👨‍🍳 Back Kitchen</h3>
+        </div>
+
+        <div className="sidebar-divider">Community</div>
+
+        <div
+          className={`sidebar-section ${
+            activeSection === 'leaderboard' ? 'active' : ''
+          }`}
+          onClick={() => setActiveSection('leaderboard')}
+        >
+          <h3>🏆 Leaderboard</h3>
         </div>
       </div>
       <div className="main-content">

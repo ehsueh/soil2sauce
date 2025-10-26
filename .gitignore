@@ -19,6 +19,7 @@
 # Hardhat coverage reports
 /coverage
 
+node_modules
 # Environment variables
 .env
 .env.local

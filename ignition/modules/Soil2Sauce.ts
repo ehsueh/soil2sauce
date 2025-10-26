@@ -17,6 +17,15 @@ const Soil2SauceModule = buildModule("Soil2SauceModule", (m) => {
     animalFarm,
   ]);
 
+  // Deploy Player management contract
+  const player = m.contract("Player", [gameToken]);
+
+  // Deploy Recipe management contract
+  const recipe = m.contract("Recipe", [player]);
+
+  // Deploy Leaderboard contract
+  const leaderboard = m.contract("Leaderboard", [recipe]);
+
   // Authorize FarmLand to mint/burn tokens
   m.call(gameToken, "setAuthorizedContract", [farmLand, true], {
     id: "authorize_farmland",
@@ -32,7 +41,7 @@ const Soil2SauceModule = buildModule("Soil2SauceModule", (m) => {
     id: "authorize_restaurant",
   });
 
-  return { gameToken, farmLand, animalFarm, restaurant };
+  return { gameToken, farmLand, animalFarm, restaurant, player, recipe, leaderboard };
 });
 
 export default Soil2SauceModule;

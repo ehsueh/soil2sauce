@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount } from 'wagmi';
+import { useState, useEffect } from 'react';
+import { useAccount, useReadContract, useConnect, useDisconnect } from 'wagmi';
 import './App.css';
 import FarmGrid from './components/FarmGrid';
 import SeedMarket from './components/SeedMarket';
@@ -15,6 +14,10 @@ import PlayerRegistration from './components/PlayerRegistration';
 import RecipeResearch from './components/RecipeResearch';
 import RecipeEvaluation from './components/RecipeEvaluation';
 import Leaderboard from './components/Leaderboard';
+import { CONTRACT_ADDRESSES } from './wagmi';
+import GameTokenABI from './contracts/GameToken.json';
+import { formatUnits } from 'viem';
+import { RefreshProvider, useRefresh } from './RefreshContext';
 
 type Section =
   | 'registration'
@@ -31,16 +34,45 @@ type Section =
   | 'recipeEvaluation'
   | 'leaderboard';
 
-function App() {
-  const [activeSection, setActiveSection] = useState<Section>('registration');
-  const { isConnected } = useAccount();
+function AppContent() {
+  const [activeSection, setActiveSection] = useState<Section>('farming');
+  const { isConnected, address } = useAccount();
+  const { connectors, connect } = useConnect();
+  const { disconnect } = useDisconnect();
+  const { refreshTrigger } = useRefresh();
+
+  // Read GCOIN balance
+  const { data: balance = 0n, refetch: refetchBalance } = useReadContract({
+    address: CONTRACT_ADDRESSES.gameToken,
+    abi: GameTokenABI.abi,
+    functionName: 'balanceOf',
+    args: [address],
+  });
+
+  // Refetch balance when global refresh trigger changes
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      refetchBalance();
+    }
+  }, [refreshTrigger, refetchBalance]);
 
   const renderSection = () => {
     if (!isConnected) {
       return (
         <div className="connect-prompt">
-          <h2>Welcome to Soil2Sauce!</h2>
-          <p>Connect your wallet to start farming</p>
+          <h1>Welcome to Soil2Sauce</h1>
+          <p>Connect your wallet to start playing!</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+            {connectors.map((connector) => (
+              <button
+                key={connector.id}
+                onClick={() => connect({ connector })}
+                className="expand-button"
+              >
+                Connect with {connector.name}
+              </button>
+            ))}
+          </div>
         </div>
       );
     }
@@ -79,10 +111,34 @@ function App() {
 
   return (
     <div className="app-layout">
-      <div className="sidebar">
-        <div className="wallet-section">
-          <ConnectButton />
-        </div>
+        <div className="sidebar">
+        {isConnected && (
+          <div className="wallet-section">
+            <div style={{ padding: '0.5rem', background: '#f0f0f0', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>Connected Account:</div>
+              <div style={{ wordBreak: 'break-all' }}>{address?.slice(0, 6)}...{address?.slice(-4)}</div>
+              <button
+                onClick={() => disconnect()}
+                style={{
+                  marginTop: '0.5rem',
+                  padding: '0.25rem 0.5rem',
+                  background: '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                }}
+              >
+                Disconnect
+              </button>
+            </div>
+            <div style={{ padding: '0.75rem', background: '#2E8B57', color: 'white', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>💰 {formatUnits(balance as bigint, 18)}</div>
+              <div style={{ fontSize: '0.8rem', opacity: 0.9 }}>GCOIN</div>
+            </div>
+          </div>
+        )}
         <div
           className={`sidebar-section ${
             activeSection === 'registration' ? 'active' : ''
@@ -201,6 +257,14 @@ function App() {
         <div className="content-section">{renderSection()}</div>
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <RefreshProvider>
+      <AppContent />
+    </RefreshProvider>
   );
 }
 

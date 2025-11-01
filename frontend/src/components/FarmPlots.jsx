@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useReadContract } from 'wagmi';
 import { CONTRACT_ADDRESSES, ITEM_METADATA } from '../contracts/addresses';
 import PlantSystemABI from '../contracts/PlantSystem.json';
-import ItemsERC1155ABI from '../contracts/ItemsERC1155.json';
+import { SeedOption } from './SeedOption';
 
 export function FarmPlots() {
   const { address } = useAccount();
@@ -176,35 +176,13 @@ export function FarmPlots() {
           <div className="seed-selector-content" onClick={(e) => e.stopPropagation()}>
             <h3>Select Seed to Plant</h3>
             <div className="seed-list">
-              {[1, 2, 3, 4, 5].map(seedId => {
-                const { data: balance } = useReadContract({
-                  address: CONTRACT_ADDRESSES.ItemsERC1155,
-                  abi: ItemsERC1155ABI,
-                  functionName: 'balanceOf',
-                  args: [address, BigInt(seedId)],
-                  query: {
-                    enabled: !!address,
-                  }
-                });
-
-                const metadata = ITEM_METADATA[seedId];
-                const hasSeeds = balance && balance > 0n;
-
-                return (
-                  <button
-                    key={seedId}
-                    className={`seed-option ${!hasSeeds ? 'disabled' : ''}`}
-                    onClick={() => hasSeeds && handlePlant(selectedPlot, seedId)}
-                    disabled={!hasSeeds}
-                  >
-                    <span className="seed-emoji">{metadata.emoji}</span>
-                    <span className="seed-name">{metadata.name}</span>
-                    <span className="seed-balance">
-                      ({balance?.toString() || 0})
-                    </span>
-                  </button>
-                );
-              })}
+              {[1, 2, 3, 4, 5].map(seedId => (
+                <SeedOption
+                  key={seedId}
+                  seedId={seedId}
+                  onPlant={(id) => handlePlant(selectedPlot, id)}
+                />
+              ))}
             </div>
             <button onClick={() => setSelectedPlot(null)} className="close-btn">
               Cancel

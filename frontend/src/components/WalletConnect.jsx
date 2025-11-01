@@ -18,17 +18,18 @@ export function WalletConnect() {
     );
   }
 
+  // Get the first available connector (injected wallet like MetaMask)
+  const connector = connectors[0];
+
   return (
     <div className="wallet-connect">
-      {connectors.map((connector) => (
-        <button
-          key={connector.id}
-          onClick={() => connect({ connector })}
-          className="connect-btn"
-        >
-          Connect Wallet
-        </button>
-      ))}
+      <button
+        onClick={() => connect({ connector })}
+        className="connect-btn"
+        disabled={!connector}
+      >
+        Connect MetaMask
+      </button>
     </div>
   );
 }

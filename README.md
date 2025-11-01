@@ -134,6 +134,39 @@ ShopSystem: 0x...
 GameRegistry: 0x...
 ```
 
+## Frontend
+
+A React-based frontend is available in the `frontend/` directory.
+
+### Quick Start
+
+```bash
+# Terminal 1: Start Anvil
+anvil
+
+# Terminal 2: Deploy contracts (from project root)
+PRIVATE_KEY=77814517325470205911140941194401928579557062014761831930645393041380819009408 \
+forge script script/Deploy.s.sol --broadcast --rpc-url http://localhost:8545
+
+# Terminal 3: Start frontend
+cd frontend
+npm install
+npm run dev
+```
+
+The app will be available at http://localhost:5173
+
+### Features
+
+- Wallet connection (MetaMask/injected wallets)
+- Player registration with starter pack
+- Interactive farm plot management
+- Livestock product claiming
+- In-game shop
+- Real-time inventory tracking
+
+See `frontend/README.md` for detailed documentation.
+
 ## Game Mechanics
 
 ### Getting Started

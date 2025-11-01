@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { WalletConnect } from './components/WalletConnect';
 import { PlayerRegistration } from './components/PlayerRegistration';
@@ -10,13 +9,11 @@ import './App.css';
 
 function App() {
   const { isConnected } = useAccount();
-  const [activeTab, setActiveTab] = useState('farm');
 
   return (
     <div className="app">
       <header className="app-header">
         <h1>🌾 Soil2Sauce</h1>
-        <p className="tagline">On-Chain Farming Game</p>
         <WalletConnect />
       </header>
 
@@ -26,43 +23,25 @@ function App() {
           <p>Connect your wallet to start farming</p>
         </div>
       ) : (
-        <>
+        <div className="game-container">
           <PlayerRegistration />
 
-          <nav className="nav-tabs">
-            <button
-              className={activeTab === 'farm' ? 'active' : ''}
-              onClick={() => setActiveTab('farm')}
-            >
-              🌾 Farm
-            </button>
-            <button
-              className={activeTab === 'livestock' ? 'active' : ''}
-              onClick={() => setActiveTab('livestock')}
-            >
-              🐄 Livestock
-            </button>
-            <button
-              className={activeTab === 'shop' ? 'active' : ''}
-              onClick={() => setActiveTab('shop')}
-            >
-              🛒 Shop
-            </button>
-            <button
-              className={activeTab === 'inventory' ? 'active' : ''}
-              onClick={() => setActiveTab('inventory')}
-            >
-              🎒 Inventory
-            </button>
-          </nav>
+          <section className="game-section">
+            <Inventory />
+          </section>
 
-          <main className="main-content">
-            {activeTab === 'farm' && <FarmPlots />}
-            {activeTab === 'livestock' && <Livestock />}
-            {activeTab === 'shop' && <Shop />}
-            {activeTab === 'inventory' && <Inventory />}
-          </main>
-        </>
+          <section className="game-section">
+            <FarmPlots />
+          </section>
+
+          <section className="game-section">
+            <Livestock />
+          </section>
+
+          <section className="game-section">
+            <Shop />
+          </section>
+        </div>
       )}
 
       <footer className="app-footer">

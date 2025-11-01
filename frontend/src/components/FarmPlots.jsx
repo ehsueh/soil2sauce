@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useReadContract } from 'wagmi';
-import { CONTRACT_ADDRESSES, ITEM_METADATA } from '../contracts/addresses';
+import { CONTRACT_ADDRESSES } from '../contracts/addresses';
 import PlantSystemABI from '../contracts/PlantSystem.json';
 import { SeedOption } from './SeedOption';
+import { PlotItem } from './PlotItem';
 
 export function FarmPlots() {
   const { address } = useAccount();
@@ -29,34 +30,6 @@ export function FarmPlots() {
       enabled: !!address,
     }
   });
-
-  // Get seed balances
-  const getSeedBalance = (seedId) => {
-    const { data } = useReadContract({
-      address: CONTRACT_ADDRESSES.ItemsERC1155,
-      abi: ItemsERC1155ABI,
-      functionName: 'balanceOf',
-      args: [address, BigInt(seedId)],
-      query: {
-        enabled: !!address,
-      }
-    });
-    return data || 0n;
-  };
-
-  // Get plot info
-  const getPlotInfo = (plotId) => {
-    const { data } = useReadContract({
-      address: CONTRACT_ADDRESSES.PlantSystem,
-      abi: PlantSystemABI,
-      functionName: 'getPlot',
-      args: [address, plotId],
-      query: {
-        enabled: !!address,
-      }
-    });
-    return data;
-  };
 
   const handlePlant = async (plotId, seedId) => {
     try {
@@ -86,76 +59,6 @@ export function FarmPlots() {
     }
   };
 
-  const formatTime = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hours}h ${minutes}m ${secs}s`;
-  };
-
-  const renderPlot = (plotIndex) => {
-    const plotId = `plot-${plotIndex}`;
-    const plotInfo = getPlotInfo(plotId);
-
-    if (!plotInfo) {
-      return (
-        <div key={plotIndex} className="farm-plot empty">
-          <div className="plot-content">Loading...</div>
-        </div>
-      );
-    }
-
-    const [seedId, plantedTime, mature] = plotInfo;
-
-    // Plot is empty
-    if (seedId === 0n) {
-      return (
-        <div
-          key={plotIndex}
-          className="farm-plot empty"
-          onClick={() => setSelectedPlot(plotId)}
-        >
-          <div className="plot-content">
-            <span className="plot-icon">🌱</span>
-            <p>Empty Plot</p>
-            <button className="plot-btn">Plant Seed</button>
-          </div>
-        </div>
-      );
-    }
-
-    // Plot has a crop
-    const seedMetadata = ITEM_METADATA[Number(seedId)];
-    const cropId = Number(seedId) + 9; // Crop ID is seed ID + 9
-    const cropMetadata = ITEM_METADATA[cropId];
-    const plantedTimestamp = Number(plantedTime);
-    const harvestTime = plantedTimestamp + seedMetadata.growthTime;
-    const timeRemaining = Math.max(0, harvestTime - currentTime);
-    const isReady = timeRemaining === 0;
-
-    return (
-      <div key={plotIndex} className={`farm-plot ${isReady ? 'ready' : 'growing'}`}>
-        <div className="plot-content">
-          <span className="plot-icon">{cropMetadata.emoji}</span>
-          <p className="crop-name">{cropMetadata.name}</p>
-          {isReady ? (
-            <>
-              <p className="status ready">Ready to Harvest!</p>
-              <button onClick={() => handleHarvest(plotId)} className="harvest-btn">
-                Harvest
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="status growing">Growing...</p>
-              <p className="time-remaining">{formatTime(timeRemaining)}</p>
-            </>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   if (!address) {
     return <div className="farm-plots">Connect wallet to view farm</div>;
   }
@@ -168,7 +71,15 @@ export function FarmPlots() {
       <h2>Farm 🌾</h2>
 
       <div className="plots-grid">
-        {plots.map(i => renderPlot(i))}
+        {plots.map(i => (
+          <PlotItem
+            key={i}
+            plotIndex={i}
+            onPlantClick={setSelectedPlot}
+            onHarvestClick={handleHarvest}
+            currentTime={currentTime}
+          />
+        ))}
       </div>
 
       {selectedPlot && (

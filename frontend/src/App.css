@@ -16,6 +16,15 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.app > * {
+  width: 100%;
+  max-width: 1200px;
 }
 
 /* Header */
@@ -81,6 +90,9 @@ body {
   padding: 48px;
   text-align: center;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .connect-prompt h2 {
@@ -147,6 +159,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  width: 100%;
+  align-items: center;
+}
+
+.game-container > * {
+  width: 100%;
+  max-width: 1200px;
 }
 
 .game-section {

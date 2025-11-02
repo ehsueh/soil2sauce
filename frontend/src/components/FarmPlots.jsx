@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useAccount, useWriteContract, useReadContract } from 'wagmi';
+import { useAccount, useWriteContract } from 'wagmi';
+import { readContract } from 'wagmi/actions';
+import { useQuery } from '@tanstack/react-query';
+import { config } from '../wagmi';
 import { CONTRACT_ADDRESSES } from '../contracts/addresses';
 import PlantSystemABI from '../contracts/PlantSystem.json';
 import { SeedOption } from './SeedOption';
 import { PlotItem } from './PlotItem';
+import { useEventContext } from '../contexts/EventProvider';
 
 export function FarmPlots() {
   const { address } = useAccount();
@@ -11,6 +15,7 @@ export function FarmPlots() {
   const [selectedSeed, setSelectedSeed] = useState(null);
   const [currentTime, setCurrentTime] = useState(Math.floor(Date.now() / 1000));
   const { writeContract } = useWriteContract();
+  const { getLastEvent } = useEventContext();
 
   // Update time every second for countdown
   useEffect(() => {
@@ -20,15 +25,21 @@ export function FarmPlots() {
     return () => clearInterval(interval);
   }, []);
 
-  // Get plot capacity
-  const { data: plotCapacity } = useReadContract({
-    address: CONTRACT_ADDRESSES.PlantSystem,
-    abi: PlantSystemABI,
-    functionName: 'plotCapacity',
-    args: [address],
-    query: {
-      enabled: !!address,
-    }
+  // Get plot capacity using React Query
+  // Note: EventProvider automatically invalidates 'plots' query
+  // when Planted/Harvested events are emitted
+  const { data: plotCapacity } = useQuery({
+    queryKey: ['plots', 'capacity', address],
+    queryFn: async () => {
+      if (!address) return 0n;
+      return await readContract(config, {
+        address: CONTRACT_ADDRESSES.PlantSystem,
+        abi: PlantSystemABI,
+        functionName: 'plotCapacity',
+        args: [address],
+      });
+    },
+    enabled: !!address,
   });
 
   const handlePlant = async (plotId, seedId) => {

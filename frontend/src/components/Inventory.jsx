@@ -1,21 +1,32 @@
-import { useAccount, useReadContract } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { readContract } from 'wagmi/actions';
+import { useQuery } from '@tanstack/react-query';
+import { config } from '../wagmi';
 import { CONTRACT_ADDRESSES } from '../contracts/addresses';
 import STOKENABI from '../contracts/STOKEN.json';
 import { formatEther } from 'viem';
 import { InventoryItem } from './InventoryItem';
+import { useEventContext } from '../contexts/EventProvider';
 
 export function Inventory() {
   const { address } = useAccount();
+  const { getLastEvent } = useEventContext();
 
-  // Read STOKEN balance
-  const { data: stokenBalance } = useReadContract({
-    address: CONTRACT_ADDRESSES.STOKEN,
-    abi: STOKENABI,
-    functionName: 'balanceOf',
-    args: [address],
-    query: {
-      enabled: !!address,
-    }
+  // Read STOKEN balance using React Query
+  // Note: EventProvider automatically invalidates 'currencies' query
+  // when Harvested or ItemPurchased events are emitted
+  const { data: stokenBalance } = useQuery({
+    queryKey: ['currencies', 'stoken', address],
+    queryFn: async () => {
+      if (!address) return 0n;
+      return await readContract(config, {
+        address: CONTRACT_ADDRESSES.STOKEN,
+        abi: STOKENABI,
+        functionName: 'balanceOf',
+        args: [address],
+      });
+    },
+    enabled: !!address,
   });
 
   const renderItemCategory = (title, itemIds) => {

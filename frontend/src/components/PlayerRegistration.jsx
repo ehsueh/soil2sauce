@@ -1,37 +1,40 @@
-import { useState, useEffect } from 'react';
-import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useState } from 'react';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { readContract } from 'wagmi/actions';
+import { useQuery } from '@tanstack/react-query';
+import { config } from '../wagmi';
 import { CONTRACT_ADDRESSES } from '../contracts/addresses';
 import GameRegistryABI from '../contracts/GameRegistry.json';
+import { useEventContext } from '../contexts/EventProvider';
 
 export function PlayerRegistration() {
   const { address } = useAccount();
   const [txHash, setTxHash] = useState(null);
+  const { getLastEvent } = useEventContext();
 
   const { writeContract } = useWriteContract();
 
-  // Check if player is registered
-  const { data: isRegistered, refetch } = useReadContract({
-    address: CONTRACT_ADDRESSES.GameRegistry,
-    abi: GameRegistryABI,
-    functionName: 'isRegistered',
-    args: [address],
-    query: {
-      enabled: !!address,
-    }
+  // Check if player is registered using React Query
+  // Note: EventProvider automatically invalidates 'playerRegistration' query
+  // when PlayerRegistered event is emitted
+  const { data: isRegistered } = useQuery({
+    queryKey: ['playerRegistration', address],
+    queryFn: async () => {
+      if (!address) return false;
+      return await readContract(config, {
+        address: CONTRACT_ADDRESSES.GameRegistry,
+        abi: GameRegistryABI,
+        functionName: 'isRegistered',
+        args: [address],
+      });
+    },
+    enabled: !!address,
   });
 
   // Wait for transaction confirmation
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+  const { isLoading: isConfirming } = useWaitForTransactionReceipt({
     hash: txHash,
   });
-
-  // Refetch registration status after transaction is confirmed
-  useEffect(() => {
-    if (isConfirmed) {
-      refetch();
-      setTxHash(null);
-    }
-  }, [isConfirmed, refetch]);
 
   const handleRegister = async () => {
     try {

@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useAccount, useReadContract } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { readContract } from 'wagmi/actions';
+import { useQuery } from '@tanstack/react-query';
+import { config } from '../wagmi';
 import { CONTRACT_ADDRESSES, ITEM_METADATA } from '../contracts/addresses';
 import PlantSystemABI from '../contracts/PlantSystem.json';
 
@@ -7,14 +10,20 @@ export function PlotItem({ plotIndex, onPlantClick, onHarvestClick, currentTime 
   const { address } = useAccount();
   const plotId = `plot-${plotIndex}`;
 
-  const { data: plotInfo } = useReadContract({
-    address: CONTRACT_ADDRESSES.PlantSystem,
-    abi: PlantSystemABI,
-    functionName: 'getPlot',
-    args: [address, plotId],
-    query: {
-      enabled: !!address,
-    }
+  // Note: EventProvider automatically invalidates 'plots' query
+  // when Planted/Harvested events are emitted
+  const { data: plotInfo } = useQuery({
+    queryKey: ['plots', address, plotId],
+    queryFn: async () => {
+      if (!address) return null;
+      return await readContract(config, {
+        address: CONTRACT_ADDRESSES.PlantSystem,
+        abi: PlantSystemABI,
+        functionName: 'getPlot',
+        args: [address, plotId],
+      });
+    },
+    enabled: !!address,
   });
 
   const formatTime = (seconds) => {

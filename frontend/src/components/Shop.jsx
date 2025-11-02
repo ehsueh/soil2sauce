@@ -15,9 +15,9 @@ const SHOP_ITEMS = [
   { id: 3, price: '20' },   // Corn Seed
   { id: 4, price: '8' },    // Lettuce Seed
   { id: 5, price: '12' },   // Carrot Seed
-  { id: 20, price: '500' }, // Cow
-  { id: 21, price: '200' }, // Chicken
-  { id: 22, price: '800' }, // Pig
+  { id: 20, price: '20' },  // Cow - Updated from 500
+  { id: 21, price: '30' },  // Chicken - Updated from 200
+  { id: 22, price: '40' },  // Pig - Updated from 800
 ];
 
 export function Shop() {

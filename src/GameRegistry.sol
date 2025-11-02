@@ -54,7 +54,9 @@ contract GameRegistry is AccessControl {
         registered[msg.sender] = true;
 
         // Mint starter STOKEN
-        stoken.mint(msg.sender, STARTER_STOKEN);
+        if (starterSTOKEN > 0) {
+            stoken.mint(msg.sender, starterSTOKEN);
+        }
 
         // Mint starter items
         if (starterItemIds.length > 0) {

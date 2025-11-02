@@ -16,7 +16,7 @@ contract GameRegistry is AccessControl {
     STOKEN public immutable stoken;
     PlantSystem public plantSystem;
 
-    uint256 public constant STARTER_STOKEN = 100 * 10 ** 18;
+    uint256 public starterSTOKEN;
 
     uint256[] public starterItemIds;
     uint256[] public starterItemAmounts;
@@ -25,6 +25,7 @@ contract GameRegistry is AccessControl {
 
     event PlayerRegistered(address indexed player, uint256 timestamp);
     event StarterPackUpdated(uint256[] itemIds, uint256[] amounts);
+    event StarterSTOKENUpdated(uint256 amount);
 
     constructor(address _items, address _stoken) {
         items = ItemsERC1155(_items);

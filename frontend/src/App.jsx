@@ -8,7 +8,7 @@ import { Inventory } from './components/Inventory';
 import './App.css';
 
 function App() {
-  const { isConnected } = useAccount();
+  const { address, isConnected, isConnecting } = useAccount();
 
   return (
     <div className="app">
@@ -17,7 +17,12 @@ function App() {
         <WalletConnect />
       </header>
 
-      {!isConnected ? (
+      {isConnecting ? (
+        <div className="connect-prompt">
+          <h2>Connecting Wallet...</h2>
+          <p>Please approve the connection in your wallet</p>
+        </div>
+      ) : !isConnected || !address ? (
         <div className="connect-prompt">
           <h2>Welcome to Soil2Sauce!</h2>
           <p>Connect your wallet to start farming</p>

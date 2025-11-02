@@ -56,16 +56,16 @@ contract PlantSystem is AccessControl {
         plotUnlockCosts = [0, 0, 0, 100 * 10**18, 150 * 10**18, 200 * 10**18, 300 * 10**18, 500 * 10**18, 800 * 10**18];
 
         // Initialize default seed configs
-        // Wheat: 24 hours
-        seedConfigs[1] = SeedConfig(1, 10, 5, 24 hours, true);
-        // Tomato: 48 hours
-        seedConfigs[2] = SeedConfig(2, 11, 3, 48 hours, true);
-        // Corn: 72 hours
-        seedConfigs[3] = SeedConfig(3, 12, 4, 72 hours, true);
-        // Lettuce: 12 hours
-        seedConfigs[4] = SeedConfig(4, 13, 4, 12 hours, true);
-        // Carrot: 36 hours
-        seedConfigs[5] = SeedConfig(5, 14, 3, 36 hours, true);
+        // Wheat: 5 seconds
+        seedConfigs[1] = SeedConfig(1, 10, 5, 5 seconds, true);
+        // Tomato: 7 seconds
+        seedConfigs[2] = SeedConfig(2, 11, 3, 7 seconds, true);
+        // Corn: 10 seconds
+        seedConfigs[3] = SeedConfig(3, 12, 4, 10 seconds, true);
+        // Lettuce: 15 seconds
+        seedConfigs[4] = SeedConfig(4, 13, 4, 15 seconds, true);
+        // Carrot: 20 seconds
+        seedConfigs[5] = SeedConfig(5, 14, 3, 20 seconds, true);
     }
 
     /// @notice Initializes a player with starting plot capacity

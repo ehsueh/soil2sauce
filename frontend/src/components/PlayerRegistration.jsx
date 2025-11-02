@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { useAccount, useWriteContract, useReadContract } from 'wagmi';
+import { useState, useEffect } from 'react';
+import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
 import { CONTRACT_ADDRESSES } from '../contracts/addresses';
 import GameRegistryABI from '../contracts/GameRegistry.json';
 
 export function PlayerRegistration() {
   const { address } = useAccount();
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [txHash, setTxHash] = useState(null);
 
   const { writeContract } = useWriteContract();
 
@@ -20,25 +20,33 @@ export function PlayerRegistration() {
     }
   });
 
+  // Wait for transaction confirmation
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+
+  // Refetch registration status after transaction is confirmed
+  useEffect(() => {
+    if (isConfirmed) {
+      refetch();
+      setTxHash(null);
+    }
+  }, [isConfirmed, refetch]);
+
   const handleRegister = async () => {
     try {
-      setIsRegistering(true);
-      await writeContract({
+      const hash = await writeContract({
         address: CONTRACT_ADDRESSES.GameRegistry,
         abi: GameRegistryABI,
         functionName: 'registerPlayer',
       });
-
-      // Refetch registration status after a delay
-      setTimeout(() => {
-        refetch();
-        setIsRegistering(false);
-      }, 2000);
+      setTxHash(hash);
     } catch (error) {
       console.error('Registration failed:', error);
-      setIsRegistering(false);
     }
   };
+
+  const isRegistering = txHash && isConfirming;
 
   if (!address) {
     return null;

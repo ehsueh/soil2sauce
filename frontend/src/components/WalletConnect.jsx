@@ -1,11 +1,11 @@
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 
 export function WalletConnect() {
-  const { address, isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
+  const { address, isConnected, isConnecting } = useAccount();
+  const { connect, connectors, isPending, error } = useConnect();
   const { disconnect } = useDisconnect();
 
-  if (isConnected) {
+  if (isConnected && address) {
     return (
       <div className="wallet-connected">
         <span className="address">
@@ -13,6 +13,17 @@ export function WalletConnect() {
         </span>
         <button onClick={() => disconnect()} className="disconnect-btn">
           Disconnect
+        </button>
+      </div>
+    );
+  }
+
+  // Show connecting state
+  if (isConnecting || isPending) {
+    return (
+      <div className="wallet-connect">
+        <button className="connect-btn" disabled>
+          Connecting...
         </button>
       </div>
     );
@@ -26,10 +37,15 @@ export function WalletConnect() {
       <button
         onClick={() => connect({ connector })}
         className="connect-btn"
-        disabled={!connector}
+        disabled={!connector || isPending}
       >
         Connect MetaMask
       </button>
+      {error && (
+        <p className="error-message">
+          Connection failed: {error.message}
+        </p>
+      )}
     </div>
   );
 }

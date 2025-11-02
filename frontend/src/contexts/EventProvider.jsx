@@ -5,8 +5,7 @@ import { CONTRACT_ADDRESSES } from '../contracts/addresses'
 import GameRegistryABI from '../contracts/GameRegistry.json'
 import PlantSystemABI from '../contracts/PlantSystem.json'
 import ShopSystemABI from '../contracts/ShopSystem.json'
-// Placeholder: Uncomment when LivestockSystem events are needed
-// import LivestockSystemABI from '../contracts/LivestockSystem.json'
+import LivestockSystemABI from '../contracts/LivestockSystem.json'
 
 const EventContext = createContext(null)
 
@@ -94,15 +93,13 @@ export const EventProvider = ({ children }) => {
         }
         break
 
-      // Placeholder for LivestockSystem events
-      // case 'LivestockSystem':
-      //   if (eventName === 'ProductsClaimed') {
-      //     queryClient.invalidateQueries({ queryKey: ['inventory'] })
-      //     queryClient.invalidateQueries({ queryKey: ['currencies'] })
-      //     queryClient.invalidateQueries({ queryKey: ['livestock'] })
-      //     console.log('[EventProvider] Invalidated: inventory, currencies, livestock')
-      //   }
-      //   break
+      case 'LivestockSystem':
+        if (eventName === 'ProductsClaimed') {
+          queryClient.invalidateQueries({ queryKey: ['inventory'] })
+          queryClient.invalidateQueries({ queryKey: ['livestock'] })
+          console.log('[EventProvider] Invalidated: inventory, livestock')
+        }
+        break
 
       default:
         console.warn(`[EventProvider] Unknown contract: ${contractName}`)
@@ -265,25 +262,25 @@ export const EventProvider = ({ children }) => {
   })
 
   // ========================================
-  // LivestockSystem Event Listeners (Placeholder)
+  // LivestockSystem Event Listeners
   // ========================================
 
-  // Placeholder: ProductsClaimed event listener
-  // useWatchContractEvent({
-  //   address: CONTRACT_ADDRESSES.LivestockSystem,
-  //   abi: LivestockSystemABI.abi,
-  //   eventName: 'ProductsClaimed',
-  //   onLogs(logs) {
-  //     logs.forEach(log => {
-  //       if (log.args.player?.toLowerCase() === connectedAddress?.toLowerCase()) {
-  //         addEventToHistory('LivestockSystem', 'ProductsClaimed', log)
-  //       } else {
-  //         console.log('[EventProvider] ProductsClaimed event ignored (different player)')
-  //       }
-  //     })
-  //   },
-  //   enabled: !!connectedAddress,
-  // })
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESSES.LivestockSystem,
+    abi: LivestockSystemABI,
+    eventName: 'ProductsClaimed',
+    onLogs(logs) {
+      logs.forEach(log => {
+        // Filter: only process events for connected wallet
+        if (log.args.player?.toLowerCase() === connectedAddress?.toLowerCase()) {
+          addEventToHistory('LivestockSystem', 'ProductsClaimed', log)
+        } else {
+          console.log('[EventProvider] ProductsClaimed event ignored (different player)')
+        }
+      })
+    },
+    enabled: !!connectedAddress,
+  })
 
   // ========================================
   // Cleanup

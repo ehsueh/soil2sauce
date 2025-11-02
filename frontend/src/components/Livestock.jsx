@@ -9,9 +9,9 @@ import ItemsERC1155ABI from '../contracts/ItemsERC1155.json';
 import { useEventContext } from '../contexts/EventProvider';
 
 const ANIMALS = [
-  { id: 20, cooldown: 12 * 3600 }, // Cow - 12h
-  { id: 21, cooldown: 8 * 3600 },  // Chicken - 8h
-  { id: 22, cooldown: 24 * 3600 }, // Pig - 24h
+  { id: 20, cooldown: 60 }, // Cow - 1 min (updated for testing)
+  { id: 21, cooldown: 60 }, // Chicken - 1 min (updated for testing)
+  { id: 22, cooldown: 60 }, // Pig - 1 min (updated for testing)
 ];
 
 export function Livestock() {
@@ -47,9 +47,9 @@ export function Livestock() {
       <div className="livestock-info">
         <p>Claim products from your animals based on probability:</p>
         <ul>
-          <li>🐮 Cow: 95% Milk, 5% Cheese (12h cooldown)</li>
-          <li>🐔 Chicken: 90% Egg, 10% Feather (8h cooldown)</li>
-          <li>🐷 Pig: 80% Pork, 20% Bacon (24h cooldown)</li>
+          <li>🐮 Cow: 95% Milk, 5% Cheese (1 min cooldown)</li>
+          <li>🐔 Chicken: 90% Egg, 10% Feather (1 min cooldown)</li>
+          <li>🐷 Pig: 80% Pork, 20% Bacon (1 min cooldown)</li>
         </ul>
       </div>
       {!address ? (

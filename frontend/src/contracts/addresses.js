@@ -56,9 +56,9 @@ export const ITEM_METADATA = {
   14: { name: 'Carrot', category: 'crop', emoji: '🥕' },
 
   // Animals
-  20: { name: 'Cow', category: 'animal', emoji: '🐮', cooldown: 12 * 3600, price: '20' },
-  21: { name: 'Chicken', category: 'animal', emoji: '🐔', cooldown: 8 * 3600, price: '30' },
-  22: { name: 'Pig', category: 'animal', emoji: '🐷', cooldown: 24 * 3600, price: '40' },
+  20: { name: 'Cow', category: 'animal', emoji: '🐮', cooldown: 60, price: '20' },
+  21: { name: 'Chicken', category: 'animal', emoji: '🐔', cooldown: 60, price: '30' },
+  22: { name: 'Pig', category: 'animal', emoji: '🐷', cooldown: 60, price: '40' },
 
   // Products
   30: { name: 'Milk', category: 'product', emoji: '🥛' },

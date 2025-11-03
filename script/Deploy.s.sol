@@ -80,6 +80,10 @@ contract DeployScript is Script {
         console.log("\nLinking PlantSystem to GameRegistry...");
         gameRegistry.setPlantSystem(address(plantSystem));
 
+        // 5. Set starter STOKEN amount (10 tokens with 18 decimals)
+        console.log("\nSetting starter STOKEN amount to 10...");
+        gameRegistry.setStarterSTOKEN(10 * 10**18);
+
         vm.stopBroadcast();
 
         // 5. Print deployment summary

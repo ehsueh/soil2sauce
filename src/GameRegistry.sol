@@ -97,4 +97,11 @@ contract GameRegistry is AccessControl {
     function getStarterPack() external view returns (uint256[] memory itemIds, uint256[] memory amounts) {
         return (starterItemIds, starterItemAmounts);
     }
+
+    /// @notice Sets the starter STOKEN amount
+    /// @param amount Amount of STOKEN to give new players
+    function setStarterSTOKEN(uint256 amount) external onlyRole(CONFIG_ADMIN_ROLE) {
+        starterSTOKEN = amount;
+        emit StarterSTOKENUpdated(amount);
+    }
 }

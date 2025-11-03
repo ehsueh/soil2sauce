@@ -1,105 +1,302 @@
-# Soil2Sauce - Web3 Panel-Based Farming Game
+# Soil2Sauce - On-Chain Farming Game
 
-A decentralized farming game built on Ethereum using Hardhat 3 and Solidity 0.8.28. This project is a Web3 reimagination of a traditional farming game, featuring on-chain game mechanics, ERC20 token economics, and true asset ownership.
+An on-chain farming and restaurant simulation game built with Foundry and Solidity.
 
 ## Overview
 
-Soil2Sauce is a blockchain-based farming simulation game where players:
-- Plant and harvest crops on their farm plots
-- Buy and manage animals that produce resources
-- Create custom dishes in a restaurant for passive income generation
-- Trade resources and earn game tokens (GCOIN)
+Soil2Sauce is a Web3 game where players can:
+- 🌾 Farm crops with realistic growth timers
+- 🐮 Raise livestock with probability-based product generation
+- 🛒 Buy seeds and animals from an in-game shop
+- 🎮 Manage their farm with expandable plots (3-9 plots)
 
-All game state and assets are stored on-chain, making them truly owned by players.
+## Smart Contracts
 
-## Smart Contracts Architecture
+### Token Layer
+- **ItemsERC1155**: Manages all in-game items (seeds, crops, animals, products)
+- **STOKEN**: In-game currency (ERC20)
 
-### GameToken (ERC20)
-- **Symbol**: GCOIN
-- **Purpose**: In-game currency for all transactions
-- **Features**: Mintable/burnable by authorized game contracts, starter tokens (100 GCOIN)
+### System Logic Layer
+- **GameRegistry**: Player onboarding and starter pack distribution
+- **PlantSystem**: Crop planting, growth, and harvesting with plot management
+- **LivestockSystem**: Animal ownership and probability-based product claiming
+- **ShopSystem**: Fixed-price shop for purchasing items
 
-### FarmLand
-Manages farm plots, planting, and harvesting mechanics.
-- 9 initial plots per player (expandable for 50 GCOIN)
-- 4 crop types: Wheat, Tomato, Strawberry, Carrot
-- Time-based crop growth, seed market, crop-to-seed conversion (1 crop → 2 seeds)
+## Features Implemented
 
-### AnimalFarm
-Manages animals and their product generation.
-- Animals: Cow (100 GCOIN), Chicken (50 GCOIN)
-- Time-based product generation (Milk: 30s, Eggs: 20s)
+### ✅ Farming System
+- Plant seeds in plots identified by frontend-provided IDs
+- Growth timers (12h to 72h depending on crop type)
+- Harvest mature crops for ingredients
+- Plot expansion system (unlock up to 9 plots)
 
-### Restaurant
-Manages custom dishes and passive income generation.
-- Create custom dishes with configurable revenue rates
-- Revenue generation every 60 seconds
-- Toggle dishes active/inactive
+### ✅ Livestock System
+- Probability-based product generation:
+  - Cow: 95% Milk, 5% Cheese (12h cooldown)
+  - Chicken: 90% Eggs, 10% Feathers (8h cooldown)
+  - Pig: 80% Pork, 20% Bacon (24h cooldown)
+- Products scale with number of animals owned
+- Cooldown system prevents spam
 
-## Usage
+### ✅ Shop System
+- Fixed prices configurable by admins
+- Seeds: 8-20 STOKEN
+- Animals: 200-800 STOKEN
+- Burns STOKEN on purchase (deflationary sink)
 
-### Running Tests
+### ✅ Admin Controls
+- Update seed configurations (growth time, yield)
+- Update animal configurations (cooldown, probabilities)
+- Update shop prices and availability
+- Update plot unlock costs
+- Update starter pack contents
 
-To run all the tests in the project, execute the following command:
+## Installation
 
-```shell
-npx hardhat test
+```bash
+# Clone the repository
+git clone <repository-url>
+cd soil2sauce
+
+# Install dependencies
+forge install
+
+# Build contracts
+forge build
+
+# Run tests
+forge test
 ```
 
-You can also selectively run the Solidity or `node:test` tests:
+## Testing
 
-```shell
-npx hardhat test solidity
-npx hardhat test nodejs
+The project includes comprehensive unit tests:
+
+```bash
+# Run all tests
+forge test
+
+# Run tests with verbosity
+forge test -vv
+
+# Run specific test file
+forge test --match-contract PlantSystemTest
+
+# Run tests with gas reporting
+forge test --gas-report
 ```
 
-### Deployment
+### Test Coverage
 
-Deploy all game contracts using Hardhat Ignition:
+- ✅ ItemsERC1155: 9 tests
+- ✅ STOKEN: 9 tests
+- ✅ GameRegistry: 8 tests
+- ✅ PlantSystem: 18 tests
+- ✅ LivestockSystem: 12 tests
+- ✅ ShopSystem: 17 tests
 
-**Local deployment:**
-```shell
-npx hardhat ignition deploy ignition/modules/Soil2Sauce.ts
+**Total: 75 tests passing**
+
+## Deployment
+
+### Local Deployment (Anvil)
+
+```bash
+# Terminal 1: Start local blockchain
+anvil
+
+# Terminal 2: Deploy contracts
+forge script script/Deploy.s.sol --broadcast --rpc-url http://localhost:8545 --private-key <PRIVATE_KEY>
 ```
 
-**Sepolia testnet:**
-```shell
-# Set your private key
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
+### Testnet Deployment
 
-# Deploy
-npx hardhat ignition deploy --network sepolia ignition/modules/Soil2Sauce.ts
+```bash
+# Set up environment variables
+cp .env.example .env
+# Edit .env and add your PRIVATE_KEY and RPC_URL
+
+# Deploy to testnet
+forge script script/Deploy.s.sol --broadcast --rpc-url $RPC_URL --private-key $PRIVATE_KEY --verify
 ```
+
+## Contract Addresses
+
+After deployment, contract addresses will be displayed in the console:
+
+```
+=== Deployment Summary ===
+ItemsERC1155: 0x...
+STOKEN: 0x...
+PlantSystem: 0x...
+LivestockSystem: 0x...
+ShopSystem: 0x...
+GameRegistry: 0x...
+```
+
+## Frontend
+
+A React-based frontend is available in the `frontend/` directory.
+
+### Quick Start
+
+```bash
+# Terminal 1: Start Anvil
+anvil
+
+# Terminal 2: Deploy contracts (from project root)
+PRIVATE_KEY=77814517325470205911140941194401928579557062014761831930645393041380819009408 \
+forge script script/Deploy.s.sol --broadcast --rpc-url http://localhost:8545
+
+# Terminal 3: Start frontend
+cd frontend
+npm install
+npm run dev
+```
+
+The app will be available at http://localhost:5173
+
+### Features
+
+- Wallet connection (MetaMask/injected wallets)
+- Player registration with starter pack
+- Interactive farm plot management
+- Livestock product claiming
+- In-game shop
+- Real-time inventory tracking
+
+See `frontend/README.md` for detailed documentation.
 
 ## Game Mechanics
 
-### Crop Economics
-| Crop | Growth Time | Seed Price | Sell Price |
-|------|------------|------------|------------|
-| Wheat | 10s | 5 GCOIN | 4 GCOIN |
-| Tomato | 15s | 8 GCOIN | 6 GCOIN |
-| Strawberry | 12s | 10 GCOIN | 8 GCOIN |
-| Carrot | 8s | 6 GCOIN | 5 GCOIN |
+### Getting Started
 
-### Progression Loop
-1. Start with 100 GCOIN + 5 wheat seeds
-2. Plant → Harvest → Sell crops
-3. Buy more diverse seeds or animals
-4. Expand farm for more plots
-5. Create restaurant dishes for passive income
-6. Scale up operations
+1. **Register**: Call `GameRegistry.registerPlayer()`
+   - Receive 100 STOKEN
+   - Receive 5 Wheat Seeds + 3 Tomato Seeds
+   - Initialize 3 farm plots
 
-## Technology Stack
+2. **Plant**: Call `PlantSystem.plant(plotId, seedId)`
+   - Burns 1 seed
+   - Creates PlantTicket with growth timer
+   - Plot is locked until harvest
 
-- **Blockchain**: Ethereum (EVM-compatible)
-- **Smart Contracts**: Solidity ^0.8.28
-- **Framework**: Hardhat 3
-- **Testing**: Node.js test runner + Viem
-- **Standards**: OpenZeppelin contracts
+3. **Harvest**: Call `PlantSystem.harvest(plotId)` after growth time
+   - Mints crops to inventory
+   - Frees up plot for replanting
 
-## Original Game
+4. **Buy Animals**: Call `ShopSystem.buyItem(animalId, quantity)`
+   - Burns STOKEN payment
+   - Receive animals in inventory
 
-Inspired by the panel-based farming game in the `18--panel-based-farming-game` directory, reimagined for Web3 with blockchain mechanics and true asset ownership.
+5. **Claim Products**: Call `LivestockSystem.claimProducts(animalId)`
+   - Rolls probability for product type
+   - Mints products (amount × animal count)
+   - Starts cooldown timer
+
+### Item IDs
+
+**Seeds (1-5)**:
+- 1: Wheat Seed (24h growth, yields 5 Wheat)
+- 2: Tomato Seed (48h growth, yields 3 Tomato)
+- 3: Corn Seed (72h growth, yields 4 Corn)
+- 4: Lettuce Seed (12h growth, yields 4 Lettuce)
+- 5: Carrot Seed (36h growth, yields 3 Carrot)
+
+**Crops (10-14)**:
+- 10: Wheat
+- 11: Tomato
+- 12: Corn
+- 13: Lettuce
+- 14: Carrot
+
+**Animals (20-22)**:
+- 20: Cow (500 STOKEN)
+- 21: Chicken (200 STOKEN)
+- 22: Pig (800 STOKEN)
+
+**Products (30-35)**:
+- 30: Milk (common from Cow)
+- 31: Egg (common from Chicken)
+- 32: Pork (common from Pig)
+- 33: Cheese (rare from Cow - 5%)
+- 34: Feather (rare from Chicken - 10%)
+- 35: Bacon (rare from Pig - 20%)
+
+## Access Control
+
+### Roles
+
+- **DEFAULT_ADMIN_ROLE**: Can grant/revoke all roles
+- **MINTER_ROLE**: Can mint/burn tokens (system contracts)
+- **CONFIG_ADMIN_ROLE**: Can update game parameters
+
+### Role Assignments
+
+After deployment:
+- System contracts have MINTER_ROLE on relevant token contracts
+- Deployer has all admin roles initially
+- Transfer DEFAULT_ADMIN_ROLE to multisig for production
+
+## Development
+
+### Project Structure
+
+```
+soil2sauce/
+├── src/
+│   ├── ItemsERC1155.sol      # Multi-token for all items
+│   ├── STOKEN.sol             # ERC20 game currency
+│   ├── GameRegistry.sol       # Player onboarding
+│   ├── PlantSystem.sol        # Farming mechanics
+│   ├── LivestockSystem.sol    # Animal products
+│   └── ShopSystem.sol         # Item shop
+├── test/
+│   ├── ItemsERC1155.t.sol
+│   ├── STOKEN.t.sol
+│   ├── GameRegistry.t.sol
+│   ├── PlantSystem.t.sol
+│   ├── LivestockSystem.t.sol
+│   └── ShopSystem.t.sol
+├── script/
+│   └── Deploy.s.sol           # Deployment script
+└── foundry.toml               # Foundry configuration
+```
+
+### Architecture
+
+```
+Frontend
+   ↓
+GameRegistry → PlantSystem → ItemsERC1155
+   ↓              ↓             ↓
+STOKEN ← ShopSystem → LivestockSystem
+```
+
+## Not Implemented (Future)
+
+- ❌ AI Recipe System
+- ❌ RecipeNFT (ERC721)
+- ❌ Marketplace trading
+- ❌ Recipe evaluation
+- ❌ Restaurant revenue system
+- ❌ Leaderboard
+
+These features are documented in PROJECT_PLAN.md and AI_SERVICES.md but not implemented per requirements.
+
+## Documentation
+
+- **PROJECT_PLAN.md**: Complete technical specifications
+- **CONTRACTS_OVERVIEW.md**: Non-technical contract explanations
+- **AI_SERVICES.md**: AI backend specifications (not implemented)
+
+## Security Considerations
+
+- All role-based access control uses OpenZeppelin's AccessControl
+- STOKEN burns require approval or MINTER_ROLE
+- Plot IDs use keccak256 hashing to prevent collisions
+- Cooldowns prevent spam claiming
+- Input validation on all public functions
 
 ## License
 

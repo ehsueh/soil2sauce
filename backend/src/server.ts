@@ -1,11 +1,10 @@
+import 'dotenv/config';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { recipeResearchHandler } from './handlers/recipeResearch.js';
 import { recipeEvaluationHandler } from './handlers/recipeEvaluation.js';
 import { marketItemsHandler } from './handlers/marketItems.js';
-
-dotenv.config();
+import { evaluateRecipeHandler } from './handlers/evaluateRecipe.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -30,6 +29,12 @@ app.post('/api/recipes/research', recipeResearchHandler);
 // Body: { recipe: {name, description, ingredients[]}, instructions: string }
 // Response: { evaluation: {grade, revenue_rate, critics} }
 app.post('/api/recipes/evaluate', recipeEvaluationHandler);
+
+// AgentKit Recipe Evaluation endpoint
+// POST /api/evaluate-recipe
+// Body: { instruction: string, ingredients: string }
+// Response: { success: boolean, data: {dishDescription, grade, revenueRate, critics} }
+app.post('/api/evaluate-recipe', evaluateRecipeHandler);
 
 // Market Items endpoint
 // GET /api/market/items?date=2024-01-01

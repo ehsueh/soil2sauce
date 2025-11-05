@@ -1,0 +1,24 @@
+{
+  "name": "soil2sauce-agentkit",
+  "version": "1.0.0",
+  "description": "Off-chain agent service for Soil2Sauce recipe evaluation",
+  "type": "module",
+  "main": "src/agent.ts",
+  "scripts": {
+    "dev": "tsx watch src/agent.ts",
+    "start": "tsx src/agent.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "viem": "^2.38.0",
+    "dotenv": "^16.4.0",
+    "axios": "^1.6.0",
+    "winston": "^3.11.0",
+    "lowdb": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  }
+}

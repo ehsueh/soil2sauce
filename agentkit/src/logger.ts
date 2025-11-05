@@ -1,0 +1,37 @@
+import winston from 'winston';
+import { config } from './config.js';
+import { mkdirSync } from 'fs';
+import { dirname } from 'path';
+
+// Ensure log directory exists
+try {
+  mkdirSync(dirname(config.logPath), { recursive: true });
+} catch (error) {
+  // Directory might already exist
+}
+
+const logger = winston.createLogger({
+  level: config.logLevel,
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  transports: [
+    // File transport (all logs)
+    new winston.transports.File({
+      filename: config.logPath,
+      maxsize: 10485760, // 10MB
+      maxFiles: 5,
+    }),
+    // Console transport (development)
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      ),
+    }),
+  ],
+});
+
+export { logger };

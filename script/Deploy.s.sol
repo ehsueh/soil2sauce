@@ -8,6 +8,7 @@ import "../src/GameRegistry.sol";
 import "../src/PlantSystem.sol";
 import "../src/LivestockSystem.sol";
 import "../src/ShopSystem.sol";
+import "../src/RecipeSystem.sol";
 
 contract DeployScript is Script {
     function run() external {
@@ -44,6 +45,10 @@ contract DeployScript is Script {
         GameRegistry gameRegistry = new GameRegistry(address(items), address(stoken));
         console.log("GameRegistry deployed at:", address(gameRegistry));
 
+        console.log("Deploying RecipeSystem...");
+        RecipeSystem recipeSystem = new RecipeSystem();
+        console.log("RecipeSystem deployed at:", address(recipeSystem));
+
         // 3. Set up roles
         console.log("\nSetting up roles...");
 
@@ -76,6 +81,16 @@ contract DeployScript is Script {
         console.log("Granting MINTER_ROLE to GameRegistry on PlantSystem");
         plantSystem.grantRole(MINTER_ROLE, address(gameRegistry));
 
+        // Grant GRADER_ROLE to agent wallet on RecipeSystem (if configured)
+        address agentWallet = vm.envOr("AGENT_WALLET_ADDRESS", address(0));
+        if (agentWallet != address(0)) {
+            bytes32 GRADER_ROLE = keccak256("GRADER_ROLE");
+            console.log("Granting GRADER_ROLE to agent wallet on RecipeSystem:", agentWallet);
+            recipeSystem.grantRole(GRADER_ROLE, agentWallet);
+        } else {
+            console.log("WARNING: AGENT_WALLET_ADDRESS not set, skipping GRADER_ROLE grant");
+        }
+
         // 4. Link PlantSystem to GameRegistry
         console.log("\nLinking PlantSystem to GameRegistry...");
         gameRegistry.setPlantSystem(address(plantSystem));
@@ -86,7 +101,7 @@ contract DeployScript is Script {
 
         vm.stopBroadcast();
 
-        // 5. Print deployment summary
+        // 6. Print deployment summary
         console.log("\n=== Deployment Summary ===");
         console.log("ItemsERC1155:", address(items));
         console.log("STOKEN:", address(stoken));
@@ -94,6 +109,7 @@ contract DeployScript is Script {
         console.log("LivestockSystem:", address(livestockSystem));
         console.log("ShopSystem:", address(shopSystem));
         console.log("GameRegistry:", address(gameRegistry));
+        console.log("RecipeSystem:", address(recipeSystem));
         console.log("\n=== Deployment Complete ===");
     }
 }

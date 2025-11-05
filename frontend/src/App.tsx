@@ -13,6 +13,8 @@ import BackKitchen from './components/BackKitchen';
 import PlayerRegistration from './components/PlayerRegistration';
 import RecipeResearch from './components/RecipeResearch';
 import RecipeEvaluation from './components/RecipeEvaluation';
+import RecipeSubmission from './components/RecipeSubmission';
+import MyRecipes from './components/MyRecipes';
 import Leaderboard from './components/Leaderboard';
 import { CONTRACT_ADDRESSES } from './wagmi';
 import GameTokenABI from './contracts/GameToken.json';
@@ -32,6 +34,8 @@ type Section =
   | 'backKitchen'
   | 'recipeResearch'
   | 'recipeEvaluation'
+  | 'recipeSubmission'
+  | 'myRecipes'
   | 'leaderboard';
 
 function AppContent() {
@@ -102,6 +106,10 @@ function AppContent() {
         return <RecipeResearch />;
       case 'recipeEvaluation':
         return <RecipeEvaluation />;
+      case 'recipeSubmission':
+        return <RecipeSubmission />;
+      case 'myRecipes':
+        return <MyRecipes />;
       case 'leaderboard':
         return <Leaderboard />;
       default:
@@ -224,6 +232,22 @@ function AppContent() {
           onClick={() => setActiveSection('recipeEvaluation')}
         >
           <h3>🔍 Evaluate Recipe</h3>
+        </div>
+        <div
+          className={`sidebar-section ${
+            activeSection === 'recipeSubmission' ? 'active' : ''
+          }`}
+          onClick={() => setActiveSection('recipeSubmission')}
+        >
+          <h3>🚀 Submit Recipe</h3>
+        </div>
+        <div
+          className={`sidebar-section ${
+            activeSection === 'myRecipes' ? 'active' : ''
+          }`}
+          onClick={() => setActiveSection('myRecipes')}
+        >
+          <h3>📚 My Recipes</h3>
         </div>
         <div
           className={`sidebar-section ${

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { CONTRACT_ADDRESSES, CropType, CROP_EMOJIS, getCropTypeName } from '../wagmi';
+import { CONTRACT_ADDRESSES, CropType, CROP_EMOJIS, getCropTypeName } from '../wagmi.ts';
 import FarmLandABI from '../contracts/FarmLand.json';
 import { useRefresh } from '../RefreshContext';
 
@@ -30,7 +30,7 @@ const SeedMarket = () => {
     try {
       await writeContract({
         address: CONTRACT_ADDRESSES.farmLand,
-        abi: FarmLandABI.abi,
+        abi: FarmLandABI,
         functionName: 'buySeeds',
         args: [cropType, BigInt(quantity)],
       });

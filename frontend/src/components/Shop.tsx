@@ -2,12 +2,11 @@ import { useState } from 'react';
 import { useAccount, useWriteContract } from 'wagmi';
 import { readContract } from 'wagmi/actions';
 import { useQuery } from '@tanstack/react-query';
-import { config } from '../wagmi';
+import { config } from '../wagmi.ts';
 import { formatEther, parseEther } from 'viem';
-import { CONTRACT_ADDRESSES, ITEM_METADATA } from '../contracts/addresses';
+import { CONTRACT_ADDRESSES, ITEM_METADATA } from '../contracts/addresses.ts';
 import ShopSystemABI from '../contracts/ShopSystem.json';
 import STOKENABI from '../contracts/STOKEN.json';
-import { useEventContext } from '../contexts/EventProvider';
 
 const SHOP_ITEMS = [
   { id: 1, price: '10' },   // Wheat Seed
@@ -22,9 +21,8 @@ const SHOP_ITEMS = [
 
 export function Shop() {
   const { address } = useAccount();
-  const [quantities, setQuantities] = useState({});
+  const [quantities, setQuantities] = useState<Record<number, number>>({});
   const { writeContract } = useWriteContract();
-  const { getLastEvent } = useEventContext();
 
   // Get STOKEN balance using React Query
   // Note: EventProvider automatically invalidates 'currencies' query
@@ -43,7 +41,7 @@ export function Shop() {
     enabled: !!address,
   });
 
-  const handleBuy = async (itemId, price) => {
+  const handleBuy = async (itemId: number, price: string) => {
     const quantity = quantities[itemId] || 1;
     const totalCost = parseEther((parseFloat(price) * quantity).toString());
 

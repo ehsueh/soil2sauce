@@ -2,20 +2,18 @@ import { useState, useEffect } from 'react';
 import { useAccount, useWriteContract } from 'wagmi';
 import { readContract } from 'wagmi/actions';
 import { useQuery } from '@tanstack/react-query';
-import { config } from '../wagmi';
-import { CONTRACT_ADDRESSES } from '../contracts/addresses';
+import { config } from '../wagmi.ts';
+import { CONTRACT_ADDRESSES } from '../contracts/addresses.ts';
 import PlantSystemABI from '../contracts/PlantSystem.json';
-import { SeedOption } from './SeedOption';
-import { PlotItem } from './PlotItem';
-import { useEventContext } from '../contexts/EventProvider';
+import { SeedOption } from './SeedOption.tsx';
+import { PlotItem } from './PlotItem.tsx';
 
 export function FarmPlots() {
   const { address } = useAccount();
-  const [selectedPlot, setSelectedPlot] = useState(null);
-  const [selectedSeed, setSelectedSeed] = useState(null);
+  const [selectedPlot, setSelectedPlot] = useState<string | null>(null);
+  const [selectedSeed, setSelectedSeed] = useState<number | null>(null);
   const [currentTime, setCurrentTime] = useState(Math.floor(Date.now() / 1000));
   const { writeContract } = useWriteContract();
-  const { getLastEvent } = useEventContext();
 
   // Update time every second for countdown
   useEffect(() => {
@@ -28,21 +26,26 @@ export function FarmPlots() {
   // Get plot capacity using React Query
   // Note: EventProvider automatically invalidates 'plots' query
   // when Planted/Harvested events are emitted
-  const { data: plotCapacity } = useQuery({
+  const { data: plotCapacity, error, isLoading } = useQuery({
     queryKey: ['plots', 'capacity', address],
     queryFn: async () => {
       if (!address) return 0n;
-      return await readContract(config, {
-        address: CONTRACT_ADDRESSES.PlantSystem,
-        abi: PlantSystemABI,
-        functionName: 'plotCapacity',
-        args: [address],
-      });
+      try {
+        return await readContract(config, {
+          address: CONTRACT_ADDRESSES.PlantSystem,
+          abi: PlantSystemABI,
+          functionName: 'plotCapacity',
+          args: [address],
+        });
+      } catch (err) {
+        console.error('Error reading plot capacity:', err);
+        return 0n;
+      }
     },
     enabled: !!address,
   });
 
-  const handlePlant = async (plotId, seedId) => {
+  const handlePlant = async (plotId: string, seedId: number) => {
     try {
       await writeContract({
         address: CONTRACT_ADDRESSES.PlantSystem,
@@ -57,7 +60,7 @@ export function FarmPlots() {
     }
   };
 
-  const handleHarvest = async (plotId) => {
+  const handleHarvest = async (plotId: string) => {
     try {
       await writeContract({
         address: CONTRACT_ADDRESSES.PlantSystem,
@@ -81,17 +84,35 @@ export function FarmPlots() {
     <div className="farm-plots">
       <h2>Farm 🌾</h2>
 
-      <div className="plots-grid">
-        {plots.map(i => (
-          <PlotItem
-            key={i}
-            plotIndex={i}
-            onPlantClick={setSelectedPlot}
-            onHarvestClick={handleHarvest}
-            currentTime={currentTime}
-          />
-        ))}
-      </div>
+      {isLoading && <p>Loading farm plots...</p>}
+      {error && <p className="error">Error loading plots: {error.message}</p>}
+
+      {!isLoading && !error && capacity === 0 && (
+        <div className="no-plots-message" style={{
+          padding: '2rem',
+          textAlign: 'center',
+          background: '#f0f0f0',
+          borderRadius: '8px',
+          margin: '1rem 0'
+        }}>
+          <p>🌱 You don't have any farm plots yet!</p>
+          <p>Register to receive your starter pack with 3 farm plots.</p>
+        </div>
+      )}
+
+      {capacity > 0 && (
+        <div className="plots-grid">
+          {plots.map(i => (
+            <PlotItem
+              key={i}
+              plotIndex={i}
+              onPlantClick={setSelectedPlot}
+              onHarvestClick={handleHarvest}
+              currentTime={currentTime}
+            />
+          ))}
+        </div>
+      )}
 
       {selectedPlot && (
         <div className="seed-selector-modal" onClick={() => setSelectedPlot(null)}>

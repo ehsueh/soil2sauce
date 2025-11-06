@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { CONTRACT_ADDRESSES } from '../wagmi';
+import { CONTRACT_ADDRESSES } from '../wagmi.ts';
 import RecipeSystemABI from '../contracts/RecipeSystem.json';
 import './RecipeSubmission.css';
 
@@ -43,7 +43,7 @@ export default function RecipeSubmission() {
     try {
       writeContract({
         address: CONTRACT_ADDRESSES.recipeSystem,
-        abi: RecipeSystemABI.abi,
+        abi: RecipeSystemABI,
         functionName: 'requestRecipe',
         args: [instruction, ingredients],
       });

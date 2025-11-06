@@ -1,5 +1,5 @@
 import { useAccount, useReadContract } from 'wagmi';
-import { CONTRACT_ADDRESSES } from '../wagmi';
+import { CONTRACT_ADDRESSES } from '../wagmi.ts';
 import AnimalFarmABI from '../contracts/AnimalFarm.json';
 
 const Stable = () => {
@@ -8,7 +8,7 @@ const Stable = () => {
   // Read player's animals
   const { data: animalIds = [] } = useReadContract({
     address: CONTRACT_ADDRESSES.animalFarm,
-    abi: AnimalFarmABI.abi,
+    abi: AnimalFarmABI,
     functionName: 'playerAnimals',
     args: [address],
   });

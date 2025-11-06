@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAccount } from 'wagmi';
 import './Leaderboard.css';
 
 interface LeaderboardEntry {
@@ -12,6 +13,7 @@ interface LeaderboardEntry {
 }
 
 export default function Leaderboard() {
+  const { isConnected, chain } = useAccount();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -122,6 +124,20 @@ export default function Leaderboard() {
           <h2>🏆 Recipe Leaderboard</h2>
           <p className="subtitle">Top chefs competing for glory!</p>
         </div>
+
+        {chain?.id !== 84532 && isConnected && (
+          <div style={{
+            padding: '1rem',
+            marginBottom: '1rem',
+            background: '#fff3cd',
+            border: '1px solid #ffc107',
+            borderRadius: '8px',
+            color: '#856404',
+            textAlign: 'center'
+          }}>
+            ⚠️ Switch to Base Sepolia network to view the real leaderboard
+          </div>
+        )}
 
         <div className="sort-controls">
           <button

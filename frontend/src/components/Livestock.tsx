@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react';
 import { useAccount, useWriteContract } from 'wagmi';
 import { readContract } from 'wagmi/actions';
 import { useQuery } from '@tanstack/react-query';
-import { config } from '../wagmi';
-import { CONTRACT_ADDRESSES, ITEM_METADATA } from '../contracts/addresses';
+import { config } from '../wagmi.ts';
+import { CONTRACT_ADDRESSES, ITEM_METADATA } from '../contracts/addresses.ts';
 import LivestockSystemABI from '../contracts/LivestockSystem.json';
 import ItemsERC1155ABI from '../contracts/ItemsERC1155.json';
-import { useEventContext } from '../contexts/EventProvider';
 
 const ANIMALS = [
   { id: 20, cooldown: 60 }, // Cow - 1 min (updated for testing)
@@ -18,7 +17,6 @@ export function Livestock() {
   const { address } = useAccount();
   const [currentTime, setCurrentTime] = useState(Math.floor(Date.now() / 1000));
   const { writeContract } = useWriteContract();
-  const { getLastEvent } = useEventContext();
 
   // Update time every second for countdown
   useEffect(() => {
@@ -28,7 +26,7 @@ export function Livestock() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleClaimProducts = async (animalId) => {
+  const handleClaimProducts = async (animalId: number) => {
     try {
       await writeContract({
         address: CONTRACT_ADDRESSES.LivestockSystem,
@@ -72,7 +70,14 @@ export function Livestock() {
 }
 
 // Separate component to use hooks properly
-function AnimalItem({ animalId, cooldown, currentTime, onClaimProducts }) {
+interface AnimalItemProps {
+  animalId: number;
+  cooldown: number;
+  currentTime: number;
+  onClaimProducts: (animalId: number) => void;
+}
+
+function AnimalItem({ animalId, cooldown, currentTime, onClaimProducts }: AnimalItemProps) {
   const { address } = useAccount();
   const metadata = ITEM_METADATA[animalId];
 
@@ -109,7 +114,7 @@ function AnimalItem({ animalId, cooldown, currentTime, onClaimProducts }) {
     enabled: !!address,
   });
 
-  const formatTime = (seconds) => {
+  const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;

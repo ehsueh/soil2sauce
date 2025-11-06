@@ -1,11 +1,15 @@
 import { useAccount } from 'wagmi';
 import { readContract } from 'wagmi/actions';
 import { useQuery } from '@tanstack/react-query';
-import { config } from '../wagmi';
-import { CONTRACT_ADDRESSES, ITEM_METADATA } from '../contracts/addresses';
+import { config } from '../wagmi.ts';
+import { CONTRACT_ADDRESSES, ITEM_METADATA } from '../contracts/addresses.ts';
 import ItemsERC1155ABI from '../contracts/ItemsERC1155.json';
 
-export function InventoryItem({ itemId }) {
+interface InventoryItemProps {
+  itemId: number;
+}
+
+export function InventoryItem({ itemId }: InventoryItemProps) {
   const { address } = useAccount();
   const metadata = ITEM_METADATA[itemId];
 

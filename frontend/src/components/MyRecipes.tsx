@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
-import { CONTRACT_ADDRESSES } from '../wagmi';
+import { CONTRACT_ADDRESSES } from '../wagmi.ts';
 import RecipeSystemABI from '../contracts/RecipeSystem.json';
 import './MyRecipes.css';
 
@@ -24,7 +24,7 @@ export default function MyRecipes() {
   // Get recipe IDs for the current user
   const { data: recipeIds = [], refetch: refetchIds } = useReadContract({
     address: CONTRACT_ADDRESSES.recipeSystem,
-    abi: RecipeSystemABI.abi,
+    abi: RecipeSystemABI,
     functionName: 'getRecipesByChef',
     args: [address],
     query: {
@@ -44,9 +44,9 @@ export default function MyRecipes() {
   }, [isConnected, chain?.id, refetchIds]);
 
   const RecipeCard = ({ recipeId }: { recipeId: bigint }) => {
-    const { data: recipe } = useReadContract({
+    const { data: recipe, isError, error } = useReadContract({
       address: CONTRACT_ADDRESSES.recipeSystem,
-      abi: RecipeSystemABI.abi,
+      abi: RecipeSystemABI,
       functionName: 'getRecipe',
       args: [recipeId],
       query: {
@@ -54,20 +54,30 @@ export default function MyRecipes() {
       },
     });
 
+    if (isError) {
+      console.error('Error loading recipe:', error);
+      return (
+        <div className="recipe-card error">
+          <p>Error loading recipe #{Number(recipeId)}</p>
+        </div>
+      );
+    }
+
     if (!recipe) return null;
 
-    const [
-      id,
-      chef,
-      instruction,
-      ingredients,
-      dishDescription,
-      grade,
-      revenueRate,
-      critics,
-      evaluated,
-      timestamp,
-    ] = recipe as any[];
+    try {
+      const [
+        id,
+        chef,
+        instruction,
+        ingredients,
+        dishDescription,
+        grade,
+        revenueRate,
+        critics,
+        evaluated,
+        timestamp,
+      ] = recipe as any[];
 
     const recipeData: Recipe = {
       recipeId: id,
@@ -99,36 +109,44 @@ export default function MyRecipes() {
       return 'F - Poor';
     };
 
-    return (
-      <div
-        className={`recipe-card ${!evaluated ? 'pending' : ''}`}
-        onClick={() => setSelectedRecipe(recipeData)}
-      >
-        <div className="recipe-card-header">
-          <h3>Recipe #{Number(id)}</h3>
-          {evaluated ? (
-            <div
-              className="grade-badge"
-              style={{ backgroundColor: getGradeColor(Number(grade)) }}
-            >
-              Grade: {Number(grade)}
+      return (
+        <div
+          className={`recipe-card ${!evaluated ? 'pending' : ''}`}
+          onClick={() => setSelectedRecipe(recipeData)}
+        >
+          <div className="recipe-card-header">
+            <h3>Recipe #{Number(id)}</h3>
+            {evaluated ? (
+              <div
+                className="grade-badge"
+                style={{ backgroundColor: getGradeColor(Number(grade)) }}
+              >
+                Grade: {Number(grade)}
+              </div>
+            ) : (
+              <div className="pending-badge">⏳ Pending Evaluation</div>
+            )}
+          </div>
+          <p className="recipe-preview">
+            {instruction.substring(0, 80)}
+            {instruction.length > 80 ? '...' : ''}
+          </p>
+          {evaluated && (
+            <div className="recipe-stats">
+              <span>💰 Revenue: {Number(revenueRate)}</span>
+              <span>📅 {new Date(Number(timestamp) * 1000).toLocaleDateString()}</span>
             </div>
-          ) : (
-            <div className="pending-badge">⏳ Pending Evaluation</div>
           )}
         </div>
-        <p className="recipe-preview">
-          {instruction.substring(0, 80)}
-          {instruction.length > 80 ? '...' : ''}
-        </p>
-        {evaluated && (
-          <div className="recipe-stats">
-            <span>💰 Revenue: {Number(revenueRate)}</span>
-            <span>📅 {new Date(Number(timestamp) * 1000).toLocaleDateString()}</span>
-          </div>
-        )}
-      </div>
-    );
+      );
+    } catch (err) {
+      console.error('Error rendering recipe card:', err);
+      return (
+        <div className="recipe-card error">
+          <p>Error rendering recipe #{Number(recipeId)}</p>
+        </div>
+      );
+    }
   };
 
   if (!isConnected) {

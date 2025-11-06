@@ -70,6 +70,23 @@
   opacity: 0.8;
 }
 
+.recipe-card.error {
+  border-color: #ef4444;
+  background: #fef2f2;
+  cursor: default;
+}
+
+.recipe-card.error:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.recipe-card.error p {
+  color: #dc2626;
+  font-weight: 500;
+  margin: 0;
+}
+
 .recipe-card-header {
   display: flex;
   justify-content: space-between;

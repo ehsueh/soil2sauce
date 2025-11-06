@@ -1,132 +1,42 @@
-.player-registration {
-  padding: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.registration-card {
+.registration-panel {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12px;
   padding: 2rem;
+  margin: 2rem auto;
+  max-width: 500px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   color: white;
-}
-
-.registration-card h2 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-  font-size: 2rem;
-}
-
-.subtitle {
-  margin-bottom: 2rem;
-  opacity: 0.9;
-  font-size: 1.1rem;
-}
-
-.form-group {
-  margin-bottom: 2rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 6px;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: white;
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.form-group input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.form-group input:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.form-group small {
-  display: block;
-  margin-top: 0.5rem;
-  opacity: 0.8;
-  font-size: 0.9rem;
-}
-
-.role-selector {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.role-option {
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  padding: 1.5rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
   text-align: center;
 }
 
-.role-option:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
+.registration-panel h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 2rem;
 }
 
-.role-option.selected {
-  border-color: white;
-  background-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+.registration-panel p {
+  font-size: 1.1rem;
+  opacity: 0.95;
+  margin-bottom: 1rem;
 }
 
-.role-icon {
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
-}
-
-.role-option h3 {
-  margin: 0.5rem 0;
-  font-size: 1.3rem;
-}
-
-.role-option p {
-  margin: 0.5rem 0 1rem;
-  opacity: 0.9;
-  font-size: 0.9rem;
-}
-
-.role-option ul {
+.registration-panel ul {
   text-align: left;
+  margin: 1.5rem auto;
+  max-width: 300px;
   list-style: none;
   padding: 0;
-  margin: 0;
-  font-size: 0.85rem;
 }
 
-.role-option li {
-  padding: 0.3rem 0;
+.registration-panel li {
+  padding: 0.5rem 0;
   padding-left: 1.5rem;
   position: relative;
+  font-size: 1rem;
 }
 
-.role-option li:before {
+.registration-panel li:before {
   content: '✓';
   position: absolute;
   left: 0;
@@ -134,26 +44,7 @@
   font-weight: bold;
 }
 
-.message {
-  padding: 1rem;
-  border-radius: 6px;
-  margin-bottom: 1rem;
-  font-weight: 500;
-}
-
-.message.success {
-  background-color: rgba(74, 222, 128, 0.2);
-  border: 1px solid rgba(74, 222, 128, 0.5);
-  color: #dcfce7;
-}
-
-.message.error {
-  background-color: rgba(239, 68, 68, 0.2);
-  border: 1px solid rgba(239, 68, 68, 0.5);
-  color: #fee2e2;
-}
-
-.register-button {
+.register-btn {
   width: 100%;
   padding: 1rem;
   background-color: white;
@@ -167,69 +58,23 @@
   margin-top: 1rem;
 }
 
-.register-button:hover:not(:disabled) {
+.register-btn:hover:not(:disabled) {
   transform: scale(1.02);
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
 }
 
-.register-button:disabled {
+.register-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.warning {
-  color: #fecaca;
-  text-align: center;
-  margin-top: 1rem;
-  font-style: italic;
-}
-
-.registration-success {
-  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
-  border-radius: 12px;
-  padding: 2rem;
-  text-align: center;
-  color: white;
-}
-
-.registration-success h2 {
-  margin-top: 0;
-  font-size: 2.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.player-profile {
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin: 1.5rem 0;
-  text-align: left;
-}
-
-.player-profile p {
-  margin: 0.75rem 0;
-  font-size: 1.1rem;
-}
-
-.success-message {
-  margin-top: 1.5rem;
-  font-size: 1.1rem;
-  line-height: 1.6;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
 @media (max-width: 600px) {
-  .role-selector {
-    grid-template-columns: 1fr;
-  }
-
-  .registration-card {
+  .registration-panel {
+    margin: 1rem;
     padding: 1.5rem;
   }
 
-  .registration-card h2 {
+  .registration-panel h2 {
     font-size: 1.5rem;
   }
 }

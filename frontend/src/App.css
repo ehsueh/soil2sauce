@@ -623,6 +623,34 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Section Dividers */
+.section-divider {
+  text-align: center;
+  font-size: 2rem;
+  color: #2d3748;
+  margin: 48px 0 24px 0;
+  padding: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  position: relative;
+}
+
+.section-divider::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #667eea, transparent);
+  border-radius: 2px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .app-header {
@@ -639,5 +667,11 @@ body {
   .shop-items,
   .inventory-items {
     grid-template-columns: 1fr;
+  }
+
+  .section-divider {
+    font-size: 1.5rem;
+    margin: 32px 0 16px 0;
+    padding: 16px;
   }
 }

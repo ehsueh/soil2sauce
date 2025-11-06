@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { CONTRACT_ADDRESSES, CropType, CROP_EMOJIS } from '../wagmi';
+import { CONTRACT_ADDRESSES, CropType, CROP_EMOJIS } from '../wagmi.ts';
 import FarmLandABI from '../contracts/FarmLand.json';
 import { useRefresh } from '../RefreshContext';
 
@@ -23,28 +23,28 @@ const MakeSeed = () => {
   // Read harvested crops for all crop types
   const wheatCrops = useReadContract({
     address: CONTRACT_ADDRESSES.farmLand,
-    abi: FarmLandABI.abi,
+    abi: FarmLandABI,
     functionName: 'harvestedCrops',
     args: [address, CropType.WHEAT],
   });
 
   const tomatoCrops = useReadContract({
     address: CONTRACT_ADDRESSES.farmLand,
-    abi: FarmLandABI.abi,
+    abi: FarmLandABI,
     functionName: 'harvestedCrops',
     args: [address, CropType.TOMATO],
   });
 
   const strawberryCrops = useReadContract({
     address: CONTRACT_ADDRESSES.farmLand,
-    abi: FarmLandABI.abi,
+    abi: FarmLandABI,
     functionName: 'harvestedCrops',
     args: [address, CropType.STRAWBERRY],
   });
 
   const carrotCrops = useReadContract({
     address: CONTRACT_ADDRESSES.farmLand,
-    abi: FarmLandABI.abi,
+    abi: FarmLandABI,
     functionName: 'harvestedCrops',
     args: [address, CropType.CARROT],
   });
@@ -71,7 +71,7 @@ const MakeSeed = () => {
   const handleMakeSeed = (cropType: CropType, quantity: number) => {
     writeContract({
       address: CONTRACT_ADDRESSES.farmLand,
-      abi: FarmLandABI.abi,
+      abi: FarmLandABI,
       functionName: 'makeSeed',
       args: [cropType, BigInt(quantity)],
     });

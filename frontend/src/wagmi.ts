@@ -16,17 +16,13 @@ export const config = createConfig({
   ],
   transports: {
     [localhostChain.id]: http('http://127.0.0.1:8545'),
-    [baseSepolia.id]: http('https://base-sepolia.g.alchemy.com/v2/2q7pEh0Rl95d--3GHlEP3'),
+    [baseSepolia.id]: http(import.meta.env.VITE_BASE_SEPOLIA_RPC_URL || 'https://base-sepolia.g.alchemy.com/v2/2q7pEh0Rl95d--3GHlEP3'),
   },
 });
 
-// Contract addresses - deployed to localhost Hardhat node
+// Contract addresses for Base Sepolia
 export const CONTRACT_ADDRESSES: Record<string, `0x${string}`> = {
-  gameToken: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
-  farmLand: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
-  animalFarm: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
-  restaurant: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9',
-  // Base Sepolia contracts
+  // Recipe System on Base Sepolia
   recipeSystem: '0xa606151dA41AE7C1Eef6c48949bEd4a8e6dd7a6c',
 };
 

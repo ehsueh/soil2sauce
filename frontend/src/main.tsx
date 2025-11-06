@@ -5,6 +5,8 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.tsx';
 import { config } from './wagmi.ts';
+import { EventProvider } from './contexts/EventProvider.tsx';
+import { RefreshProvider } from './RefreshContext.tsx';
 
 const queryClient = new QueryClient();
 
@@ -12,8 +14,12 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <App />
+        <EventProvider>
+          <RefreshProvider>
+            <App />
+          </RefreshProvider>
+        </EventProvider>
       </QueryClientProvider>
     </WagmiProvider>
   </StrictMode>
-)
+);

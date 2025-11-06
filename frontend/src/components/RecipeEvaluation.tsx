@@ -23,7 +23,7 @@ const AVAILABLE_INGREDIENTS = [
 ];
 
 export default function RecipeEvaluation() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chain } = useAccount();
   const [recipeName, setRecipeName] = useState('');
   const [recipeDescription, setRecipeDescription] = useState('');
   const [ingredients, setIngredients] = useState([{ name: '', amount: '' }]);
@@ -80,7 +80,8 @@ export default function RecipeEvaluation() {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('http://localhost:3001/api/recipes/evaluate', {
+      const backendUrl = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${backendUrl}/api/recipes/evaluate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -208,6 +209,19 @@ export default function RecipeEvaluation() {
       <div className="evaluation-container">
         <h2>🔍 Recipe Evaluation</h2>
         <p className="subtitle">Get AI feedback on your recipe before publishing</p>
+
+        {chain?.id !== 84532 && isConnected && (
+          <div className="network-warning" style={{
+            padding: '1rem',
+            marginBottom: '1rem',
+            background: '#fff3cd',
+            border: '1px solid #ffc107',
+            borderRadius: '8px',
+            color: '#856404'
+          }}>
+            ⚠️ Note: This feature uses Base Sepolia network. Switch to Base Sepolia for on-chain submission.
+          </div>
+        )}
 
         <div className="evaluation-form">
           <div className="form-group">

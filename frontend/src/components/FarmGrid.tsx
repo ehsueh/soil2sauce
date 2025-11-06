@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { CONTRACT_ADDRESSES, CropType, CROP_EMOJIS, getCropTypeName } from '../wagmi';
+import { CONTRACT_ADDRESSES, CropType, CROP_EMOJIS, getCropTypeName } from '../wagmi.ts';
 import FarmLandABI from '../contracts/FarmLand.json';
 import { useRefresh } from '../RefreshContext';
 
@@ -14,7 +14,7 @@ const FarmGrid = () => {
   // Read player's plots
   const { data: plotIds = [], refetch: refetchPlots } = useReadContract({
     address: CONTRACT_ADDRESSES.farmLand,
-    abi: FarmLandABI.abi,
+    abi: FarmLandABI,
     functionName: 'getPlayerPlots',
     args: [address],
   });
@@ -22,7 +22,7 @@ const FarmGrid = () => {
   // Read seed inventory for selected seed type
   const { data: seedCount = 0n, refetch: refetchSeedCount } = useReadContract({
     address: CONTRACT_ADDRESSES.farmLand,
-    abi: FarmLandABI.abi,
+    abi: FarmLandABI,
     functionName: 'getSeedInventory',
     args: [address, selectedSeed],
   });
@@ -61,7 +61,7 @@ const FarmGrid = () => {
 
       writeContract({
         address: CONTRACT_ADDRESSES.farmLand,
-        abi: FarmLandABI.abi,
+        abi: FarmLandABI,
         functionName: 'plantSeed',
         args: [plotId, selectedSeed],
       });
@@ -77,7 +77,7 @@ const FarmGrid = () => {
 
       writeContract({
         address: CONTRACT_ADDRESSES.farmLand,
-        abi: FarmLandABI.abi,
+        abi: FarmLandABI,
         functionName: 'harvestCrop',
         args: [plotId],
       });
@@ -93,7 +93,7 @@ const FarmGrid = () => {
 
       writeContract({
         address: CONTRACT_ADDRESSES.farmLand,
-        abi: FarmLandABI.abi,
+        abi: FarmLandABI,
         functionName: 'expandFarm',
         args: [],
       });
@@ -109,7 +109,7 @@ const FarmGrid = () => {
 
       writeContract({
         address: CONTRACT_ADDRESSES.farmLand,
-        abi: FarmLandABI.abi,
+        abi: FarmLandABI,
         functionName: 'initializePlayer',
         args: [address],
       });
@@ -196,7 +196,7 @@ const PlotCell = ({ plotId, onPlant, onHarvest, refreshTrigger }: PlotCellProps)
   const [countdown, setCountdown] = useState<number>(0);
   const { data: plotStatus, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.farmLand,
-    abi: FarmLandABI.abi,
+    abi: FarmLandABI,
     functionName: 'getPlotStatus',
     args: [plotId],
   });

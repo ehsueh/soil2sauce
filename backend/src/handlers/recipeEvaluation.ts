@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 
-const client = new Anthropic();
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 interface RecipeEvaluationRequest {
   recipe: {
@@ -42,7 +44,7 @@ export async function recipeEvaluationHandler(req: Request, res: Response) {
       .map(ing => `- ${ing.name} (${ing.amount})`)
       .join('\n');
 
-    // Create prompt for Claude
+    // Create prompt for OpenAI
     const prompt = `You are a Michelin-starred head chef evaluating recipes for a farming game called Soil2Sauce.
 
 Please evaluate this recipe:
@@ -84,32 +86,33 @@ Format your response EXACTLY as JSON with no additional text:
   "critics": "A well-balanced dish that showcases the ingredients beautifully. The cooking method is straightforward yet elegant, making it accessible to diners while maintaining quality. High potential for consistent demand."
 }`;
 
-    // Call Claude API
-    const message = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+    // Call OpenAI API
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4-turbo-preview',
       max_tokens: 1024,
       messages: [
         {
           role: 'user',
           content: prompt
         }
-      ]
+      ],
+      temperature: 0.7,
     });
 
     // Extract response text
-    const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+    const responseText = completion.choices[0]?.message?.content || '';
 
     // Parse JSON response
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error('Failed to parse Claude response as JSON');
+      throw new Error('Failed to parse OpenAI response as JSON');
     }
 
     const evaluation: EvaluationResponse = JSON.parse(jsonMatch[0]);
 
     // Validate response structure
     if (!evaluation.grade || evaluation.revenue_rate === undefined || !evaluation.critics) {
-      throw new Error('Invalid evaluation response structure from Claude');
+      throw new Error('Invalid evaluation response structure from OpenAI');
     }
 
     // Validate grade

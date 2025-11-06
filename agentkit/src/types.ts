@@ -24,13 +24,12 @@ export interface Config {
 export interface RecipeRequestedEvent {
   recipeId: bigint;
   chef: `0x${string}`;
-  instruction: string;
+  dishDescription: string;
   ingredients: string;
   timestamp: bigint;
 }
 
 export interface EvaluationData {
-  dishDescription: string;
   grade: number;
   revenueRate: number;
   critics: string;

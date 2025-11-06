@@ -12,12 +12,11 @@ if (!ASSISTANT_ID) {
 }
 
 interface EvaluateRecipeRequest {
-  instruction: string;
+  dishDescription: string;
   ingredients: string;
 }
 
 interface EvaluateRecipeResponse {
-  dishDescription: string;
   grade: number; // 1-100
   revenueRate: number;
   critics: string;
@@ -30,13 +29,13 @@ interface EvaluateRecipeResponse {
  */
 export async function evaluateRecipeHandler(req: Request, res: Response) {
   try {
-    const { instruction, ingredients }: EvaluateRecipeRequest = req.body;
+    const { dishDescription, ingredients }: EvaluateRecipeRequest = req.body;
 
     // Validate input
-    if (!instruction || typeof instruction !== 'string' || instruction.trim().length === 0) {
+    if (!dishDescription || typeof dishDescription !== 'string' || dishDescription.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid input: instruction is required and must be a non-empty string'
+        error: 'Invalid input: dishDescription is required and must be a non-empty string'
       });
     }
 
@@ -57,9 +56,9 @@ export async function evaluateRecipeHandler(req: Request, res: Response) {
     // Create user message content
     const userMessage = `Evaluate this recipe:
 
-Ingredients: ${ingredients}
+Dish Description: ${dishDescription}
 
-Instructions: ${instruction}`;
+Ingredients: ${ingredients}`;
 
     // Create a thread
     const thread = await openai.beta.threads.create();
@@ -123,8 +122,7 @@ Instructions: ${instruction}`;
     const evaluation: EvaluateRecipeResponse = JSON.parse(jsonMatch[0]);
 
     // Validate response structure
-    if (!evaluation.dishDescription ||
-        evaluation.grade === undefined ||
+    if (evaluation.grade === undefined ||
         evaluation.revenueRate === undefined ||
         !evaluation.critics) {
       throw new Error('Invalid evaluation response structure from AI');
@@ -136,14 +134,12 @@ Instructions: ${instruction}`;
     // Validate and clamp revenue rate
     const clampedRevenueRate = Math.max(50, Math.min(200, Math.round(evaluation.revenueRate)));
 
-    // Ensure dishDescription and critics are reasonable lengths
-    const dishDescription = evaluation.dishDescription.substring(0, 500);
+    // Ensure critics are reasonable length
     const critics = evaluation.critics.substring(0, 500);
 
     res.json({
       success: true,
       data: {
-        dishDescription,
         grade: clampedGrade,
         revenueRate: clampedRevenueRate,
         critics

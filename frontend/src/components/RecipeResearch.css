@@ -134,7 +134,14 @@
   border-left: 4px solid #dc2626;
 }
 
+.action-buttons-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
 .research-button {
+  flex: 1;
   padding: 1rem 2rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -154,6 +161,62 @@
 .research-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.submit-blockchain-button {
+  flex: 1;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.submit-blockchain-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.submit-blockchain-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #9ca3af;
+}
+
+.reset-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #e2e8f0;
+  color: #2d3748;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 0.5rem;
+}
+
+.reset-btn:hover:not(:disabled) {
+  background-color: #cbd5e0;
+}
+
+.reset-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.confirming-message {
+  padding: 1rem;
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 600;
 }
 
 /* Recipe Result Styles */
@@ -291,6 +354,95 @@
   background-color: #cbd5e0;
 }
 
+/* Success Screen Styles */
+.success-container {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+.success-icon {
+  font-size: 5rem;
+  margin-bottom: 1rem;
+  animation: scaleIn 0.5s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.success-container h2 {
+  color: #10b981;
+  margin-bottom: 1rem;
+}
+
+.success-message {
+  color: #4a5568;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.transaction-info {
+  background-color: #f7fafc;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.transaction-info p {
+  margin: 0.5rem 0;
+  color: #2d3748;
+}
+
+.tx-hash {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  word-break: break-all;
+  background-color: #e2e8f0;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin: 0.5rem 0 1rem 0;
+}
+
+.view-tx-btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.view-tx-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.submit-another-btn {
+  padding: 1rem 2rem;
+  background-color: #e2e8f0;
+  color: #2d3748;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.submit-another-btn:hover {
+  background-color: #cbd5e0;
+}
+
 @media (max-width: 600px) {
   .recipe-header {
     flex-direction: column;
@@ -308,6 +460,10 @@
   }
 
   .action-buttons {
+    flex-direction: column;
+  }
+
+  .action-buttons-row {
     flex-direction: column;
   }
 

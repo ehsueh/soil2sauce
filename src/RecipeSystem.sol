@@ -14,10 +14,9 @@ contract RecipeSystem is ERC721, AccessControl {
     struct Recipe {
         uint256 recipeId;
         address chef;
-        string instruction;
+        string dishDescription;
         string ingredients;
         // Evaluation results (populated after grading)
-        string dishDescription;
         uint8 grade; // 1-100
         uint256 revenueRate;
         string critics;
@@ -41,7 +40,7 @@ contract RecipeSystem is ERC721, AccessControl {
     event RecipeRequested(
         uint256 indexed recipeId,
         address indexed chef,
-        string instruction,
+        string dishDescription,
         string ingredients,
         uint256 timestamp
     );
@@ -62,14 +61,14 @@ contract RecipeSystem is ERC721, AccessControl {
     }
 
     /// @notice Request a new recipe to be evaluated
-    /// @param instruction The cooking instructions
+    /// @param dishDescription The AI-generated dish description
     /// @param ingredients The list of ingredients
     /// @return recipeId The ID of the created recipe
     function requestRecipe(
-        string calldata instruction,
+        string calldata dishDescription,
         string calldata ingredients
     ) external returns (uint256) {
-        require(bytes(instruction).length > 0, "Instruction cannot be empty");
+        require(bytes(dishDescription).length > 0, "Dish description cannot be empty");
         require(bytes(ingredients).length > 0, "Ingredients cannot be empty");
 
         uint256 recipeId = _nextRecipeId++;
@@ -77,9 +76,8 @@ contract RecipeSystem is ERC721, AccessControl {
         recipes[recipeId] = Recipe({
             recipeId: recipeId,
             chef: msg.sender,
-            instruction: instruction,
+            dishDescription: dishDescription,
             ingredients: ingredients,
-            dishDescription: "",
             grade: 0,
             revenueRate: 0,
             critics: "",
@@ -92,7 +90,7 @@ contract RecipeSystem is ERC721, AccessControl {
         emit RecipeRequested(
             recipeId,
             msg.sender,
-            instruction,
+            dishDescription,
             ingredients,
             block.timestamp
         );
@@ -102,13 +100,11 @@ contract RecipeSystem is ERC721, AccessControl {
 
     /// @notice Finalize a recipe with AI evaluation results
     /// @param recipeId The ID of the recipe to finalize
-    /// @param dishDescription The AI-generated dish description
     /// @param grade The grade (1-100)
     /// @param revenueRate The revenue multiplier rate
     /// @param critics The AI-generated critics feedback
     function finalizeRecipe(
         uint256 recipeId,
-        string calldata dishDescription,
         uint8 grade,
         uint256 revenueRate,
         string calldata critics
@@ -122,7 +118,6 @@ contract RecipeSystem is ERC721, AccessControl {
         processingLock[recipeId] = true;
 
         Recipe storage recipe = recipes[recipeId];
-        recipe.dishDescription = dishDescription;
         recipe.grade = grade;
         recipe.revenueRate = revenueRate;
         recipe.critics = critics;
@@ -134,7 +129,7 @@ contract RecipeSystem is ERC721, AccessControl {
         emit RecipeFinalized(
             recipeId,
             recipe.chef,
-            dishDescription,
+            recipe.dishDescription,
             grade,
             revenueRate,
             critics

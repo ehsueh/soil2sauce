@@ -1,6 +1,10 @@
 import { useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { CONTRACT_ADDRESSES } from '../wagmi.ts';
+import RecipeSystemJSON from '../contracts/RecipeSystem.json';
 import './RecipeResearch.css';
+
+const RecipeSystemABI = RecipeSystemJSON.abi;
 
 interface Ingredient {
   name: string;
@@ -21,14 +25,27 @@ const AVAILABLE_INGREDIENTS = [
 ];
 
 export default function RecipeResearch() {
-  const { address, isConnected } = useAccount();
-  const [dishDescription, setDishDescription] = useState('');
+  const { address, isConnected, chain } = useAccount();
+  const [cookingInstructions, setCookingInstructions] = useState('');
   const [ingredients, setIngredients] = useState<Ingredient[]>([
     { name: '', amount: '' }
   ]);
   const [loading, setLoading] = useState(false);
   const [researched, setResearched] = useState<ResearchedRecipe | null>(null);
   const [error, setError] = useState('');
+  const [submissionSuccess, setSubmissionSuccess] = useState(false);
+
+  const { data: hash, writeContract, isPending, error: writeError } = useWriteContract();
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash,
+    });
+
+  // Log write errors
+  if (writeError) {
+    console.error('❌ Write contract error:', writeError);
+  }
 
   const handleAddIngredient = () => {
     setIngredients([...ingredients, { name: '', amount: '' }]);
@@ -54,8 +71,8 @@ export default function RecipeResearch() {
       return;
     }
 
-    if (!dishDescription.trim()) {
-      setError('Please describe your dish');
+    if (!cookingInstructions.trim()) {
+      setError('Please provide cooking instructions');
       return;
     }
 
@@ -68,13 +85,14 @@ export default function RecipeResearch() {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('http://localhost:3001/api/recipes/research', {
+      const backendUrl = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${backendUrl}/api/recipes/research`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          description: dishDescription,
+          description: cookingInstructions,
           ingredients: filledIngredients
         })
       });
@@ -93,12 +111,94 @@ export default function RecipeResearch() {
     }
   };
 
-  const handleCreateRecipe = async () => {
-    if (!researched) return;
-    // TODO: Call smart contract createRecipe function
-    console.log('Creating recipe:', researched);
-    alert('Recipe creation would be submitted to smart contract');
+  const handleSubmitToBlockchain = async () => {
+    console.log('🚀 handleSubmitToBlockchain called');
+    console.log('Researched recipe:', researched);
+
+    if (!researched) {
+      console.log('❌ No researched recipe');
+      return;
+    }
+
+    if (!isConnected || !address) {
+      setError('Please connect your wallet first');
+      console.log('❌ Wallet not connected');
+      return;
+    }
+
+    if (chain?.id !== 84532) {
+      setError('Please switch to Base Sepolia network to submit');
+      console.log('❌ Wrong network:', chain?.id);
+      return;
+    }
+
+    setError('');
+
+    try {
+      // Format ingredients for blockchain submission
+      const filledIngredients = ingredients.filter(ing => ing.name && ing.amount);
+      const ingredientsStr = filledIngredients
+        .map(ing => `${ing.amount} ${ing.name}`)
+        .join(', ');
+
+      console.log('📝 Submitting AI-generated recipe to blockchain:', {
+        dishDescription: researched.description,
+        ingredients: ingredientsStr,
+        contract: CONTRACT_ADDRESSES.recipeSystem
+      });
+
+      // Submit AI-generated dish description and ingredients to blockchain
+      writeContract({
+        address: CONTRACT_ADDRESSES.recipeSystem,
+        abi: RecipeSystemABI,
+        functionName: 'requestRecipe',
+        args: [researched.description, ingredientsStr],
+      });
+
+      console.log('✅ writeContract called successfully');
+    } catch (err) {
+      console.error('❌ Error in handleSubmitToBlockchain:', err);
+      setError(err instanceof Error ? err.message : 'Failed to submit recipe');
+    }
   };
+
+  // Handle submission success
+  if (isConfirmed && hash) {
+    return (
+      <div className="recipe-research">
+        <div className="success-container">
+          <div className="success-icon">✅</div>
+          <h2>Recipe Submitted to Blockchain!</h2>
+          <p className="success-message">
+            Your AI-generated recipe has been submitted on-chain and will be evaluated by our Michelin-starred AI chef within 15-45 seconds.
+          </p>
+          <div className="transaction-info">
+            <p><strong>Transaction Hash:</strong></p>
+            <p className="tx-hash">{hash}</p>
+            <a
+              href={`https://sepolia.basescan.org/tx/${hash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="view-tx-btn"
+            >
+              View on BaseScan →
+            </a>
+          </div>
+          <button
+            className="submit-another-btn"
+            onClick={() => {
+              setResearched(null);
+              setCookingInstructions('');
+              setIngredients([{ name: '', amount: '' }]);
+              window.location.reload();
+            }}
+          >
+            Create Another Recipe
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const getDifficultyColor = (level: number) => {
     if (level <= 3) return '#4ade80';
@@ -110,82 +210,135 @@ export default function RecipeResearch() {
     <div className="recipe-research">
       <div className="research-container">
         <h2>🔬 Recipe Research</h2>
-        <p className="subtitle">Describe your dish and let AI help you create the perfect recipe</p>
+        <p className="subtitle">Provide cooking instructions and ingredients, then AI will generate your recipe details</p>
 
-        {!researched ? (
-          <div className="research-form">
-            <div className="form-group">
-              <label htmlFor="description">Dish Description</label>
-              <textarea
-                id="description"
-                placeholder="Describe your dish... e.g., 'A hearty tomato and egg breakfast scramble with fresh herbs'"
-                value={dishDescription}
-                onChange={(e) => setDishDescription(e.target.value)}
-                disabled={loading}
-                rows={4}
-              />
-            </div>
+        {chain?.id !== 84532 && isConnected && (
+          <div style={{
+            padding: '1rem',
+            marginBottom: '1rem',
+            background: '#fff3cd',
+            border: '1px solid #ffc107',
+            borderRadius: '8px',
+            color: '#856404'
+          }}>
+            ⚠️ Note: Recipe research is available on any network, but blockchain submission requires Base Sepolia.
+          </div>
+        )}
 
-            <div className="form-group">
-              <label>Ingredients</label>
-              <div className="ingredients-list">
-                {ingredients.map((ingredient, index) => (
-                  <div key={index} className="ingredient-row">
-                    <select
-                      value={ingredient.name}
-                      onChange={(e) =>
-                        handleIngredientChange(index, 'name', e.target.value)
-                      }
-                      disabled={loading}
+        <div className="research-form">
+          <div className="form-group">
+            <label htmlFor="instructions">Cooking Instructions</label>
+            <textarea
+              id="instructions"
+              placeholder="e.g., 'Mix flour, sugar, eggs, and butter in a bowl. Pour into greased pan. Bake at 350F for 30 minutes until golden brown.'"
+              value={cookingInstructions}
+              onChange={(e) => setCookingInstructions(e.target.value)}
+              disabled={loading || isPending || isConfirming}
+              rows={4}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Ingredients</label>
+            <div className="ingredients-list">
+              {ingredients.map((ingredient, index) => (
+                <div key={index} className="ingredient-row">
+                  <select
+                    value={ingredient.name}
+                    onChange={(e) =>
+                      handleIngredientChange(index, 'name', e.target.value)
+                    }
+                    disabled={loading || isPending || isConfirming}
+                  >
+                    <option value="">Select ingredient</option>
+                    {AVAILABLE_INGREDIENTS.map((ing) => (
+                      <option key={ing} value={ing}>
+                        {ing}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Amount (e.g., 2 cups, 100g)"
+                    value={ingredient.amount}
+                    onChange={(e) =>
+                      handleIngredientChange(index, 'amount', e.target.value)
+                    }
+                    disabled={loading || isPending || isConfirming}
+                  />
+                  {ingredients.length > 1 && (
+                    <button
+                      className="remove-btn"
+                      onClick={() => handleRemoveIngredient(index)}
+                      disabled={loading || isPending || isConfirming}
                     >
-                      <option value="">Select ingredient</option>
-                      {AVAILABLE_INGREDIENTS.map((ing) => (
-                        <option key={ing} value={ing}>
-                          {ing}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      placeholder="Amount (e.g., 2 cups, 100g)"
-                      value={ingredient.amount}
-                      onChange={(e) =>
-                        handleIngredientChange(index, 'amount', e.target.value)
-                      }
-                      disabled={loading}
-                    />
-                    {ingredients.length > 1 && (
-                      <button
-                        className="remove-btn"
-                        onClick={() => handleRemoveIngredient(index)}
-                        disabled={loading}
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <button
-                className="add-ingredient-btn"
-                onClick={handleAddIngredient}
-                disabled={loading}
-              >
-                + Add Ingredient
-              </button>
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
+            <button
+              className="add-ingredient-btn"
+              onClick={handleAddIngredient}
+              disabled={loading || isPending || isConfirming}
+            >
+              + Add Ingredient
+            </button>
+          </div>
 
-            {error && <div className="error-message">{error}</div>}
+          {error && <div className="error-message">{error}</div>}
 
+          {writeError && (
+            <div className="error-message">
+              Transaction Error: {writeError.message}
+            </div>
+          )}
+
+          {isConfirming && (
+            <div className="confirming-message">
+              ⏳ Waiting for confirmation...
+            </div>
+          )}
+
+          <div className="action-buttons-row">
             <button
               className="research-button"
               onClick={handleResearch}
-              disabled={loading || !isConnected}
+              disabled={loading || !isConnected || isPending || isConfirming}
             >
-              {loading ? 'Researching Recipe...' : '🚀 Research Recipe with AI'}
+              {loading ? 'Researching Recipe...' : '🔬 Research Recipe with AI'}
+            </button>
+            <button
+              className="submit-blockchain-button"
+              onClick={handleSubmitToBlockchain}
+              disabled={!researched || isPending || isConfirming || !isConnected || chain?.id !== 84532}
+              title={!researched ? 'Research a recipe first' : ''}
+            >
+              {isPending
+                ? '📝 Submitting...'
+                : isConfirming
+                ? '⏳ Confirming...'
+                : '🚀 Submit to Blockchain'}
             </button>
           </div>
-        ) : (
+
+          {researched && (
+            <button
+              className="reset-btn"
+              onClick={() => {
+                setResearched(null);
+                setCookingInstructions('');
+                setIngredients([{ name: '', amount: '' }]);
+              }}
+              disabled={isPending || isConfirming}
+            >
+              ↺ Start New Recipe
+            </button>
+          )}
+        </div>
+
+        {researched && (
           <div className="recipe-result">
             <div className="recipe-header">
               <h3>{researched.name}</h3>
@@ -209,34 +362,6 @@ export default function RecipeResearch() {
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="recipe-section">
-              <h4>Cooking Instructions</h4>
-              <ol className="instructions-list">
-                {researched.cooking_instructions.split(/(?:^|\. )/m).filter(Boolean).map((step, i) => (
-                  <li key={i}>{step.trim()}</li>
-                ))}
-              </ol>
-            </div>
-
-            <div className="action-buttons">
-              <button
-                className="create-recipe-btn"
-                onClick={handleCreateRecipe}
-              >
-                ✅ Create This Recipe
-              </button>
-              <button
-                className="back-btn"
-                onClick={() => {
-                  setResearched(null);
-                  setDishDescription('');
-                  setIngredients([{ name: '', amount: '' }]);
-                }}
-              >
-                ← Try Another Recipe
-              </button>
             </div>
           </div>
         )}

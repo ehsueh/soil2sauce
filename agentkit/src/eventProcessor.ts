@@ -11,7 +11,6 @@ const RECIPE_SYSTEM_ABI = [
     name: 'finalizeRecipe',
     inputs: [
       { name: 'recipeId', type: 'uint256' },
-      { name: 'dishDescription', type: 'string' },
       { name: 'grade', type: 'uint8' },
       { name: 'revenueRate', type: 'uint256' },
       { name: 'critics', type: 'string' },
@@ -40,7 +39,7 @@ export class EventProcessor {
     logger.info('Recipe request received', {
       recipeId,
       chef: event.chef,
-      instruction: event.instruction.substring(0, 50),
+      dishDescription: event.dishDescription.substring(0, 50),
       timestamp: Number(event.timestamp),
     });
 
@@ -72,7 +71,7 @@ export class EventProcessor {
       });
 
       const evaluation = await this.callBackendAPI(
-        event.instruction,
+        event.dishDescription,
         event.ingredients
       );
 
@@ -124,14 +123,14 @@ export class EventProcessor {
   }
 
   private async callBackendAPI(
-    instruction: string,
+    dishDescription: string,
     ingredients: string
   ): Promise<EvaluationData> {
     try {
       const response = await axios.post(
         `${config.backendApiUrl}/api/evaluate-recipe`,
         {
-          instruction,
+          dishDescription,
           ingredients,
         },
         {
@@ -150,7 +149,6 @@ export class EventProcessor {
 
       // Validate response structure
       if (
-        !data.dishDescription ||
         data.grade === undefined ||
         data.revenueRate === undefined ||
         !data.critics
@@ -159,7 +157,6 @@ export class EventProcessor {
       }
 
       return {
-        dishDescription: data.dishDescription,
         grade: data.grade,
         revenueRate: data.revenueRate,
         critics: data.critics,
@@ -197,7 +194,6 @@ export class EventProcessor {
         functionName: 'finalizeRecipe',
         args: [
           BigInt(recipeId),
-          evaluation.dishDescription,
           evaluation.grade,
           BigInt(evaluation.revenueRate),
           evaluation.critics,
@@ -215,7 +211,6 @@ export class EventProcessor {
         functionName: 'finalizeRecipe',
         args: [
           BigInt(recipeId),
-          evaluation.dishDescription,
           evaluation.grade,
           BigInt(evaluation.revenueRate),
           evaluation.critics,

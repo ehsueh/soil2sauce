@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import OpenAI from 'openai';
+import { createRecipeMetadata, uploadMetadataToIPFS } from '../services/ipfs.js';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -12,30 +13,31 @@ if (!ASSISTANT_ID) {
 }
 
 interface EvaluateRecipeRequest {
-  dishDescription: string;
+  instruction: string;
   ingredients: string;
 }
 
 interface EvaluateRecipeResponse {
+  dishDescription: string;
   grade: number; // 1-100
   revenueRate: number;
   critics: string;
 }
 
 /**
- * Recipe Evaluation Handler for AgentKit
- * Evaluates a recipe submission from on-chain and provides evaluation data
- * This endpoint is called by the off-chain AgentKit service
+ * Recipe Evaluation Handler
+ * Accepts ingredients and cooking instructions, generates dish description via AI,
+ * and returns evaluation data (dishDescription, grade, revenueRate, critics)
  */
 export async function evaluateRecipeHandler(req: Request, res: Response) {
   try {
-    const { dishDescription, ingredients }: EvaluateRecipeRequest = req.body;
+    const { instruction, ingredients }: EvaluateRecipeRequest = req.body;
 
     // Validate input
-    if (!dishDescription || typeof dishDescription !== 'string' || dishDescription.trim().length === 0) {
+    if (!instruction || typeof instruction !== 'string' || instruction.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid input: dishDescription is required and must be a non-empty string'
+        error: 'Invalid input: instruction is required and must be a non-empty string'
       });
     }
 
@@ -54,11 +56,9 @@ export async function evaluateRecipeHandler(req: Request, res: Response) {
     }
 
     // Create user message content
-    const userMessage = `Evaluate this recipe:
+    const userMessage = `Ingredients: ${ingredients}
 
-Dish Description: ${dishDescription}
-
-Ingredients: ${ingredients}`;
+Cooking Instructions: ${instruction}`;
 
     // Create a thread
     const thread = await openai.beta.threads.create();
@@ -122,7 +122,8 @@ Ingredients: ${ingredients}`;
     const evaluation: EvaluateRecipeResponse = JSON.parse(jsonMatch[0]);
 
     // Validate response structure
-    if (evaluation.grade === undefined ||
+    if (!evaluation.dishDescription ||
+        evaluation.grade === undefined ||
         evaluation.revenueRate === undefined ||
         !evaluation.critics) {
       throw new Error('Invalid evaluation response structure from AI');
@@ -137,12 +138,33 @@ Ingredients: ${ingredients}`;
     // Ensure critics are reasonable length
     const critics = evaluation.critics.substring(0, 500);
 
+    // Ensure dish description is reasonable length
+    const dishDescription = evaluation.dishDescription.substring(0, 100);
+
+    // Create and upload metadata to IPFS
+    let metadataURI = '';
+    try {
+      const metadata = createRecipeMetadata(
+        dishDescription,
+        ingredients,
+        clampedGrade,
+        clampedRevenueRate,
+        critics
+      );
+      metadataURI = await uploadMetadataToIPFS(metadata);
+    } catch (ipfsError) {
+      console.error('IPFS upload failed:', ipfsError);
+      // Continue without IPFS URI - it's optional
+    }
+
     res.json({
       success: true,
       data: {
+        dishDescription,
         grade: clampedGrade,
         revenueRate: clampedRevenueRate,
-        critics
+        critics,
+        metadataURI
       }
     });
   } catch (error) {

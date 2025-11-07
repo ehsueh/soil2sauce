@@ -17,7 +17,7 @@ contract RecipeSystemTest is Test {
     event RecipeRequested(
         uint256 indexed recipeId,
         address indexed chef,
-        string instruction,
+        string dishDescription,
         string ingredients,
         uint256 timestamp
     );
@@ -56,7 +56,7 @@ contract RecipeSystemTest is Test {
         RecipeSystem.Recipe memory recipe = recipeSystem.getRecipe(1);
         assertEq(recipe.recipeId, 1);
         assertEq(recipe.chef, chef1);
-        assertEq(recipe.instruction, "Mix ingredients and bake at 350F for 30 minutes");
+        assertEq(recipe.dishDescription, "Mix ingredients and bake at 350F for 30 minutes");
         assertEq(recipe.ingredients, "flour, sugar, eggs, butter");
         assertEq(recipe.evaluated, false);
         assertEq(recipe.grade, 0);
@@ -92,9 +92,9 @@ contract RecipeSystemTest is Test {
         assertEq(recipeSystem.getTotalRecipes(), 2);
     }
 
-    function testRequestRecipeRevertsOnEmptyInstruction() public {
+    function testRequestRecipeRevertsOnEmptyDishDescription() public {
         vm.prank(chef1);
-        vm.expectRevert("Instruction cannot be empty");
+        vm.expectRevert("Dish description cannot be empty");
         recipeSystem.requestRecipe("", "flour, sugar");
     }
 
@@ -138,7 +138,8 @@ contract RecipeSystemTest is Test {
             "Delicious homemade cake",
             85,
             150,
-            "Great creativity and technique"
+            "Great creativity and technique",
+            "ipfs://QmTest123"
         );
 
         RecipeSystem.Recipe memory recipe = recipeSystem.getRecipe(recipeId);
@@ -156,7 +157,7 @@ contract RecipeSystemTest is Test {
         assertEq(recipeSystem.balanceOf(chef1), 0);
 
         vm.prank(grader);
-        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 85, 150, "Great job");
+        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 85, 150, "Great job", "ipfs://QmTest");
 
         assertEq(recipeSystem.balanceOf(chef1), 1);
         assertEq(recipeSystem.ownerOf(recipeId), chef1);
@@ -177,7 +178,7 @@ contract RecipeSystemTest is Test {
             "Great job"
         );
 
-        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 85, 150, "Great job");
+        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 85, 150, "Great job", "ipfs://QmTest");
     }
 
     function testFinalizeRecipeSetsProcessingLock() public {
@@ -187,7 +188,7 @@ contract RecipeSystemTest is Test {
         assertEq(recipeSystem.isProcessing(recipeId), false);
 
         vm.prank(grader);
-        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 85, 150, "Great job");
+        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 85, 150, "Great job", "ipfs://QmTest");
 
         assertEq(recipeSystem.isProcessing(recipeId), true);
     }
@@ -198,7 +199,7 @@ contract RecipeSystemTest is Test {
 
         vm.prank(nonGrader);
         vm.expectRevert();
-        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 85, 150, "Great job");
+        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 85, 150, "Great job", "ipfs://QmTest");
     }
 
     function testFinalizeRecipeRevertsIfAlreadyEvaluated() public {
@@ -206,17 +207,17 @@ contract RecipeSystemTest is Test {
         uint256 recipeId = recipeSystem.requestRecipe("instruction", "ingredients");
 
         vm.prank(grader);
-        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 85, 150, "Great job");
+        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 85, 150, "Great job", "ipfs://QmTest");
 
         vm.prank(grader);
         vm.expectRevert("Recipe already evaluated");
-        recipeSystem.finalizeRecipe(recipeId, "Another dish", 90, 160, "Even better");
+        recipeSystem.finalizeRecipe(recipeId, "Another dish", 90, 160, "Even better", "ipfs://QmTest2");
     }
 
     function testFinalizeRecipeRevertsIfRecipeDoesNotExist() public {
         vm.prank(grader);
         vm.expectRevert("Recipe does not exist");
-        recipeSystem.finalizeRecipe(999, "Delicious dish", 85, 150, "Great job");
+        recipeSystem.finalizeRecipe(999, "Delicious dish", 85, 150, "Great job", "ipfs://QmTest");
     }
 
     function testFinalizeRecipeRevertsOnInvalidGradeTooLow() public {
@@ -225,7 +226,7 @@ contract RecipeSystemTest is Test {
 
         vm.prank(grader);
         vm.expectRevert("Grade must be between 1 and 100");
-        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 0, 150, "Great job");
+        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 0, 150, "Great job", "ipfs://QmTest");
     }
 
     function testFinalizeRecipeRevertsOnInvalidGradeTooHigh() public {
@@ -234,7 +235,7 @@ contract RecipeSystemTest is Test {
 
         vm.prank(grader);
         vm.expectRevert("Grade must be between 1 and 100");
-        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 101, 150, "Great job");
+        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 101, 150, "Great job", "ipfs://QmTest");
     }
 
     function testFinalizeRecipeWithMinimumGrade() public {
@@ -242,7 +243,7 @@ contract RecipeSystemTest is Test {
         uint256 recipeId = recipeSystem.requestRecipe("instruction", "ingredients");
 
         vm.prank(grader);
-        recipeSystem.finalizeRecipe(recipeId, "Needs improvement", 1, 50, "Try again");
+        recipeSystem.finalizeRecipe(recipeId, "Needs improvement", 1, 50, "Try again", "ipfs://QmTest");
 
         RecipeSystem.Recipe memory recipe = recipeSystem.getRecipe(recipeId);
         assertEq(recipe.grade, 1);
@@ -253,7 +254,7 @@ contract RecipeSystemTest is Test {
         uint256 recipeId = recipeSystem.requestRecipe("instruction", "ingredients");
 
         vm.prank(grader);
-        recipeSystem.finalizeRecipe(recipeId, "Perfect dish", 100, 200, "Masterpiece");
+        recipeSystem.finalizeRecipe(recipeId, "Perfect dish", 100, 200, "Masterpiece", "ipfs://QmTest");
 
         RecipeSystem.Recipe memory recipe = recipeSystem.getRecipe(recipeId);
         assertEq(recipe.grade, 100);
@@ -293,7 +294,7 @@ contract RecipeSystemTest is Test {
 
         assertEq(recipe.recipeId, 1);
         assertEq(recipe.chef, chef1);
-        assertEq(recipe.instruction, "instruction");
+        assertEq(recipe.dishDescription, "instruction");
         assertEq(recipe.ingredients, "ingredients");
     }
 
@@ -321,7 +322,7 @@ contract RecipeSystemTest is Test {
         assertEq(recipeSystem.isProcessing(recipeId), false);
 
         vm.prank(grader);
-        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 85, 150, "Great job");
+        recipeSystem.finalizeRecipe(recipeId, "Delicious dish", 85, 150, "Great job", "ipfs://QmTest");
 
         assertEq(recipeSystem.isProcessing(recipeId), true);
     }
@@ -342,10 +343,10 @@ contract RecipeSystemTest is Test {
 
         // Grader finalizes recipe1 and recipe3
         vm.prank(grader);
-        recipeSystem.finalizeRecipe(recipe1, "Dish 1", 75, 120, "Good");
+        recipeSystem.finalizeRecipe(recipe1, "Dish 1", 75, 120, "Good", "ipfs://QmTest1");
 
         vm.prank(grader);
-        recipeSystem.finalizeRecipe(recipe3, "Dish 3", 90, 180, "Excellent");
+        recipeSystem.finalizeRecipe(recipe3, "Dish 3", 90, 180, "Excellent", "ipfs://QmTest3");
 
         // Check NFT ownership
         assertEq(recipeSystem.balanceOf(chef1), 1);

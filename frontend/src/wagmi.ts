@@ -22,8 +22,8 @@ export const config = createConfig({
 
 // Contract addresses for Base Sepolia
 export const CONTRACT_ADDRESSES: Record<string, `0x${string}`> = {
-  // Recipe System on Base Sepolia
-  recipeSystem: '0xa606151dA41AE7C1Eef6c48949bEd4a8e6dd7a6c',
+  // Recipe System on Base Sepolia (Updated with IPFS support)
+  recipeSystem: '0x85c4447b9f4c5285C7F9468232b2aF154627e9C4',
 };
 
 // Enum mappings from contracts

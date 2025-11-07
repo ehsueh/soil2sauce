@@ -22,6 +22,7 @@ contract RecipeSystem is ERC721, AccessControl {
         string critics;
         bool evaluated;
         uint256 timestamp;
+        string metadataURI; // IPFS URI for NFT metadata
     }
 
     /// @notice Mapping from recipe ID to Recipe data
@@ -29,6 +30,9 @@ contract RecipeSystem is ERC721, AccessControl {
 
     /// @notice Mapping to prevent double grading
     mapping(uint256 => bool) public processingLock;
+
+    /// @notice Mapping from token ID to metadata URI
+    mapping(uint256 => string) private _tokenURIs;
 
     /// @notice Counter for recipe IDs
     uint256 private _nextRecipeId;
@@ -82,7 +86,8 @@ contract RecipeSystem is ERC721, AccessControl {
             revenueRate: 0,
             critics: "",
             evaluated: false,
-            timestamp: block.timestamp
+            timestamp: block.timestamp,
+            metadataURI: ""
         });
 
         _chefRecipes[msg.sender].push(recipeId);
@@ -100,14 +105,18 @@ contract RecipeSystem is ERC721, AccessControl {
 
     /// @notice Finalize a recipe with AI evaluation results
     /// @param recipeId The ID of the recipe to finalize
+    /// @param dishDescription The AI-generated dish description
     /// @param grade The grade (1-100)
     /// @param revenueRate The revenue multiplier rate
     /// @param critics The AI-generated critics feedback
+    /// @param metadataURI The IPFS URI for NFT metadata
     function finalizeRecipe(
         uint256 recipeId,
+        string calldata dishDescription,
         uint8 grade,
         uint256 revenueRate,
-        string calldata critics
+        string calldata critics,
+        string calldata metadataURI
     ) external onlyRole(GRADER_ROLE) {
         require(recipeId > 0 && recipeId < _nextRecipeId, "Recipe does not exist");
         require(!recipes[recipeId].evaluated, "Recipe already evaluated");
@@ -118,10 +127,15 @@ contract RecipeSystem is ERC721, AccessControl {
         processingLock[recipeId] = true;
 
         Recipe storage recipe = recipes[recipeId];
+        recipe.dishDescription = dishDescription;
         recipe.grade = grade;
         recipe.revenueRate = revenueRate;
         recipe.critics = critics;
         recipe.evaluated = true;
+        recipe.metadataURI = metadataURI;
+
+        // Set token URI
+        _tokenURIs[recipeId] = metadataURI;
 
         // Mint NFT to the chef
         _safeMint(recipe.chef, recipeId);
@@ -162,6 +176,15 @@ contract RecipeSystem is ERC721, AccessControl {
     /// @return The total count
     function getTotalRecipes() external view returns (uint256) {
         return _nextRecipeId - 1;
+    }
+
+    /// @notice Get the token URI for a recipe NFT
+    /// @param tokenId The token ID
+    /// @return The metadata URI (IPFS)
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        _requireOwned(tokenId);
+        string memory uri = _tokenURIs[tokenId];
+        return bytes(uri).length > 0 ? uri : "";
     }
 
     /// @notice Override supportsInterface to support multiple inheritance

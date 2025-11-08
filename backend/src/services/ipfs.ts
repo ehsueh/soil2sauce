@@ -17,6 +17,7 @@ interface RecipeMetadata {
   grade: number;
   revenueRate: number;
   critics: string;
+  recipeId?: number;
 }
 
 /**

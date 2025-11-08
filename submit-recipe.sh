@@ -16,5 +16,5 @@ cast send 0xa606151dA41AE7C1Eef6c48949bEd4a8e6dd7a6c \
   --private-key $PRIVATE_KEY
 
 echo ""
-echo "✅ Recipe submitted! Watch the AgentKit terminal for processing logs."
+echo "✅ Recipe submitted! Watch the backend terminal for processing logs."
 echo "The agent should detect and process this recipe within 15 seconds."

@@ -5,6 +5,7 @@ import { recipeResearchHandler } from './handlers/recipeResearch.js';
 import { recipeEvaluationHandler } from './handlers/recipeEvaluation.js';
 import { marketItemsHandler } from './handlers/marketItems.js';
 import { evaluateRecipeHandler } from './handlers/evaluateRecipe.js';
+import { mintRecipeHandler } from './handlers/mintRecipe.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -13,9 +14,34 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Request logging middleware
+app.use((req: Request, res: Response, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`📨 ${req.method} ${req.path}`, {
+    timestamp,
+    ip: req.ip,
+    userAgent: req.get('user-agent')?.substring(0, 100) + '...',
+    contentType: req.get('content-type'),
+    bodySize: req.body ? JSON.stringify(req.body).length : 0,
+  });
+  next();
+});
+
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
+  console.log('💚 Health check requested');
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Test endpoint to check request logging
+app.post('/api/test', (req: Request, res: Response) => {
+  console.log('🧪 Test endpoint called with body:', req.body);
+  res.json({ 
+    success: true, 
+    message: 'Test endpoint working',
+    receivedBody: req.body,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Recipe Research endpoint
@@ -30,11 +56,27 @@ app.post('/api/recipes/research', recipeResearchHandler);
 // Response: { evaluation: {grade, revenue_rate, critics} }
 app.post('/api/recipes/evaluate', recipeEvaluationHandler);
 
-// AgentKit Recipe Evaluation endpoint
+// Recipe Evaluation endpoint
 // POST /api/evaluate-recipe
-// Body: { instruction: string, ingredients: string }
-// Response: { success: boolean, data: {dishDescription, grade, revenueRate, critics} }
-app.post('/api/evaluate-recipe', evaluateRecipeHandler);
+// Body: { instruction: string, ingredients: string, walletAddress: string }
+// Response: { success: boolean, data: {dishDescription, grade, revenueRate, critics, metadataURI, hash, timestamp} }
+app.post('/api/evaluate-recipe', (req: Request, res: Response) => {
+  console.log('🔥 EVALUATE RECIPE ENDPOINT CALLED!');
+  console.log('🔥 Request body keys:', Object.keys(req.body || {}));
+  console.log('🔥 Full request body:', req.body);
+  evaluateRecipeHandler(req, res);
+});
+
+// Mint Recipe NFT endpoint
+// POST /api/mint-recipe
+// Body: { recipeId, walletAddress, dishDescription, ingredients, grade, revenueRate, critics, metadataURI, hash, timestamp }
+// Response: { success: boolean, recipeId: string, txHash: string }
+app.post('/api/mint-recipe', (req: Request, res: Response) => {
+  console.log('🔥 MINT RECIPE ENDPOINT CALLED!');
+  console.log('🔥 Request body keys:', Object.keys(req.body || {}));
+  console.log('🔥 RecipeId:', req.body?.recipeId);
+  mintRecipeHandler(req, res);
+});
 
 // Market Items endpoint
 // GET /api/market/items?date=2024-01-01

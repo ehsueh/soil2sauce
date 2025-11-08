@@ -6,7 +6,7 @@ This guide walks you through getting all the values you need for the 3 `.env` fi
 
 - [ ] Get Alchemy API key (for RPC)
 - [ ] Create/fund deployer wallet
-- [ ] Create/fund agent wallet
+- [ ] Create/fund backend wallet
 - [ ] Get OpenAI API key
 - [ ] Create OpenAI Assistant
 - [ ] Deploy contracts
@@ -35,10 +35,9 @@ This guide walks you through getting all the values you need for the 3 `.env` fi
 3. Copy the **HTTPS** endpoint
 4. It looks like: `https://base-sepolia.g.alchemy.com/v2/abc123xyz456`
 
-### 1.4 Update Both Files
+### 1.4 Update Environment File
 Paste this URL into:
 - ✅ `.env` → `BASE_RPC_URL`
-- ✅ `agentkit/.env` → `BASE_RPC_URL`
 
 ---
 
@@ -85,9 +84,9 @@ Paste private key into:
 
 ---
 
-## Step 3: Create Agent Wallet
+## Step 3: Create Backend Wallet
 
-This is a **separate wallet** that will run the agent service.
+This is a **separate wallet** that the backend service will use for blockchain transactions.
 
 ### 3.1 Create New Wallet
 ```bash
@@ -96,15 +95,15 @@ cast wallet new
 
 Save both:
 - **Address** (0x...) - for deployment
-- **Private key** (0x...) - for agent
+- **Private key** (0x...) - for backend service
 
-### 3.2 Fund Agent Wallet
+### 3.2 Fund Backend Wallet
 1. Use faucet: https://www.alchemy.com/faucets/base-sepolia
 2. Request 0.1 Sepolia ETH (enough for ~100 recipe evaluations)
 
 ### 3.3 Update Files
-- ✅ `.env` → `AGENT_WALLET_ADDRESS` = agent's **address** (0x...)
-- ✅ `agentkit/.env` → `AGENT_PRIVATE_KEY` = agent's **private key** (0x...)
+- ✅ `.env` → `AGENT_WALLET_ADDRESS` = backend's **address** (0x...)
+- ✅ `backend/.env` → `GRADER_PRIVATE_KEY` = backend's **private key** (0x...)
 
 ---
 
@@ -119,7 +118,7 @@ Save both:
 ### 4.2 Create API Key
 1. Go to https://platform.openai.com/api-keys
 2. Click "Create new secret key"
-3. Name it: "Soil2Sauce Recipe Agent"
+3. Name it: "Soil2Sauce Recipe Evaluator"
 4. Copy the key (starts with `sk-`)
    - **⚠️ You can only see this ONCE!** Save it now!
 
@@ -224,7 +223,7 @@ Instructions: Mix all ingredients. Bake at 350F for 30 minutes.
 Check `.env` has:
 - ✅ `PRIVATE_KEY` (your deployer wallet)
 - ✅ `BASE_RPC_URL` (Alchemy URL)
-- ✅ `AGENT_WALLET_ADDRESS` (agent's public address)
+- ✅ `AGENT_WALLET_ADDRESS` (backend service's public address)
 
 ### 6.2 Deploy
 ```bash
@@ -243,8 +242,8 @@ RecipeSystem deployed at: 0xABC123...
 
 Copy that address!
 
-### 6.4 Update AgentKit .env
-- ✅ `agentkit/.env` → `RECIPE_CONTRACT_ADDRESS` = `0xABC123...`
+### 6.4 Update Backend .env
+- ✅ `backend/.env` → `RECIPE_CONTRACT_ADDRESS` = `0xABC123...`
 
 ---
 
@@ -267,16 +266,12 @@ Should have:
 - ✅ OPENAI_API_KEY (sk-...)
 - ✅ OPENAI_ASSISTANT_ID (asst_...)
 
-### 7.3 Check AgentKit `.env`
-```bash
-cat agentkit/.env
-```
-Should have:
+### 7.3 Check Backend Environment
+Backend should have all required environment variables including:
 - ✅ BASE_RPC_URL (same as root)
 - ✅ BASE_CHAIN_ID=84532
 - ✅ RECIPE_CONTRACT_ADDRESS (0x... from deployment)
-- ✅ AGENT_PRIVATE_KEY (0x + 64 hex chars)
-- ✅ BACKEND_API_URL=http://localhost:3001
+- ✅ GRADER_PRIVATE_KEY (0x + 64 hex chars)
 
 ---
 
@@ -285,13 +280,13 @@ Should have:
 Before testing, verify:
 
 - [ ] Deployer wallet has Sepolia ETH
-- [ ] Agent wallet has Sepolia ETH
+- [ ] Backend wallet has Sepolia ETH
 - [ ] Alchemy RPC URL works in both .env files
 - [ ] OpenAI API key is valid
 - [ ] OpenAI Assistant ID is correct
 - [ ] Contracts are deployed
-- [ ] Agent wallet has GRADER_ROLE (automatic during deployment)
-- [ ] RECIPE_CONTRACT_ADDRESS is filled in agentkit/.env
+- [ ] Backend wallet has GRADER_ROLE (automatic during deployment)
+- [ ] RECIPE_CONTRACT_ADDRESS is filled in backend/.env
 
 ---
 

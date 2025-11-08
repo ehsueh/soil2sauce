@@ -7,14 +7,14 @@ import './MyRecipes.css';
 interface Recipe {
   recipeId: bigint;
   chef: string;
-  instruction: string;
-  ingredients: string;
   dishDescription: string;
+  ingredients: string;
   grade: number;
   revenueRate: bigint;
   critics: string;
   evaluated: boolean;
   timestamp: bigint;
+  metadataURI: string;
 }
 
 export default function MyRecipes() {
@@ -66,31 +66,21 @@ export default function MyRecipes() {
     if (!recipe) return null;
 
     try {
-      const [
-        id,
-        chef,
-        instruction,
-        ingredients,
-        dishDescription,
-        grade,
-        revenueRate,
-        critics,
-        evaluated,
-        timestamp,
-      ] = recipe as any[];
+      // Recipe is returned as an object with named properties from the contract struct
+      const recipeObj = recipe as any;
 
-    const recipeData: Recipe = {
-      recipeId: id,
-      chef,
-      instruction,
-      ingredients,
-      dishDescription,
-      grade: Number(grade),
-      revenueRate,
-      critics,
-      evaluated,
-      timestamp,
-    };
+      const recipeData: Recipe = {
+        recipeId: recipeObj.recipeId,
+        chef: recipeObj.chef,
+        dishDescription: recipeObj.dishDescription,
+        ingredients: recipeObj.ingredients,
+        grade: Number(recipeObj.grade),
+        revenueRate: recipeObj.revenueRate,
+        critics: recipeObj.critics,
+        evaluated: recipeObj.evaluated,
+        timestamp: recipeObj.timestamp,
+        metadataURI: recipeObj.metadataURI,
+      };
 
     const getGradeColor = (grade: number): string => {
       if (grade >= 90) return '#22c55e'; // Green
@@ -111,30 +101,30 @@ export default function MyRecipes() {
 
       return (
         <div
-          className={`recipe-card ${!evaluated ? 'pending' : ''}`}
+          className={`recipe-card ${!recipeData.evaluated ? 'pending' : ''}`}
           onClick={() => setSelectedRecipe(recipeData)}
         >
           <div className="recipe-card-header">
-            <h3>Recipe #{Number(id)}</h3>
-            {evaluated ? (
+            <h3>Recipe #{Number(recipeData.recipeId)}</h3>
+            {recipeData.evaluated ? (
               <div
                 className="grade-badge"
-                style={{ backgroundColor: getGradeColor(Number(grade)) }}
+                style={{ backgroundColor: getGradeColor(recipeData.grade) }}
               >
-                Grade: {Number(grade)}
+                Grade: {recipeData.grade}
               </div>
             ) : (
               <div className="pending-badge">⏳ Pending Evaluation</div>
             )}
           </div>
           <p className="recipe-preview">
-            {instruction.substring(0, 80)}
-            {instruction.length > 80 ? '...' : ''}
+            {recipeData.dishDescription.substring(0, 80)}
+            {recipeData.dishDescription.length > 80 ? '...' : ''}
           </p>
-          {evaluated && (
+          {recipeData.evaluated && (
             <div className="recipe-stats">
-              <span>💰 Revenue: {Number(revenueRate)}</span>
-              <span>📅 {new Date(Number(timestamp) * 1000).toLocaleDateString()}</span>
+              <span>💰 Revenue: {Number(recipeData.revenueRate)}</span>
+              <span>📅 {new Date(Number(recipeData.timestamp) * 1000).toLocaleDateString()}</span>
             </div>
           )}
         </div>
@@ -192,7 +182,7 @@ export default function MyRecipes() {
     return (
       <div className="my-recipes">
         <div className="recipe-detail">
-          <button className="back-button" onClick={() => setSelectedRecipe(null)}>
+          <button className="back-button" onClick={() => setSelectedRecipe(null)} style={{ color: '#1a1a1a' }}>
             ← Back to My Recipes
           </button>
 
@@ -236,10 +226,57 @@ export default function MyRecipes() {
               <h3>📝 Ingredients</h3>
               <p>{selectedRecipe.ingredients}</p>
             </div>
+          </div>
 
-            <div className="detail-section">
-              <h3>👩‍🍳 Instructions</h3>
-              <p>{selectedRecipe.instruction}</p>
+          <div className="blockchain-links" style={{
+            marginTop: '2rem',
+            padding: '1.5rem',
+            background: '#f8f9fa',
+            borderRadius: '8px',
+            border: '1px solid #e9ecef'
+          }}>
+            <h3 style={{ marginBottom: '1rem', color: '#1a1a1a' }}>🔗 Blockchain & IPFS Links</h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <a
+                href={`https://sepolia.basescan.org/token/${CONTRACT_ADDRESSES.recipeSystem}?a=${selectedRecipe.recipeId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  color: '#0066cc',
+                  textDecoration: 'none',
+                  padding: '0.5rem',
+                  background: 'white',
+                  borderRadius: '4px',
+                  border: '1px solid #dee2e6'
+                }}
+              >
+                🔍 View NFT on BaseScan →
+              </a>
+
+              {selectedRecipe.metadataURI && (
+                <a
+                  href={selectedRecipe.metadataURI.replace('ipfs://', 'https://ipfs.io/ipfs/')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    color: '#0066cc',
+                    textDecoration: 'none',
+                    padding: '0.5rem',
+                    background: 'white',
+                    borderRadius: '4px',
+                    border: '1px solid #dee2e6'
+                  }}
+                >
+                  📦 View Metadata on IPFS →
+                </a>
+              )}
             </div>
           </div>
 

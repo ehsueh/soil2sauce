@@ -1,6 +1,6 @@
-# Testing Guide for Recipe AgentKit System
+# Testing Guide for Recipe System
 
-This guide walks you through testing the complete Recipe AgentKit implementation.
+This guide walks you through testing the complete Recipe system implementation.
 
 ## Prerequisites
 
@@ -9,7 +9,7 @@ Before testing, ensure you have:
 1. ✅ **OpenAI API Key** - From https://platform.openai.com/api-keys
 2. ✅ **OpenAI Assistant ID** - Follow `backend/OPENAI_ASSISTANT_SETUP.md`
 3. ✅ **Base RPC URL** - From Alchemy or Infura (for Base network)
-4. ✅ **Test wallet with private key** - For agent service
+4. ✅ **Test wallet with private key** - For backend service
 5. ✅ **ETH on Base** - For gas (testnet or mainnet)
 
 ## Test 1: Smart Contracts ✅ PASSED
@@ -110,7 +110,7 @@ cp .env.example .env
 # Edit .env and add:
 # PRIVATE_KEY=0x... (your deployer wallet private key)
 # BASE_RPC_URL=https://base-mainnet.g.alchemy.com/v2/YOUR_KEY
-# AGENT_WALLET_ADDRESS=0x... (the wallet that will run the agent)
+# AGENT_WALLET_ADDRESS=0x... (the wallet that the backend service uses)
 ```
 
 ### 3.2 Deploy to Base Sepolia (Testnet)
@@ -132,7 +132,7 @@ forge script script/Deploy.s.sol \
 # Check RecipeSystem was deployed
 cast code <RECIPE_SYSTEM_ADDRESS> --rpc-url base-sepolia
 
-# Verify agent has GRADER_ROLE
+# Verify backend wallet has GRADER_ROLE
 cast call <RECIPE_SYSTEM_ADDRESS> \
   "hasRole(bytes32,address)" \
   $(cast keccak "GRADER_ROLE") \
@@ -142,91 +142,83 @@ cast call <RECIPE_SYSTEM_ADDRESS> \
 
 **Expected**: Should return `true` (0x0000...0001)
 
-## Test 4: AgentKit Service
+## Test 4: Frontend Integration
 
-### 4.1 Setup AgentKit
+### 4.1 Setup Frontend
 
 ```bash
-cd agentkit
+cd frontend
 
 # Install dependencies
 npm install
 
-# Create .env file
-cp .env.example .env
-
-# Edit .env and add:
-# BASE_RPC_URL=https://base-sepolia.g.alchemy.com/v2/YOUR_KEY
-# BASE_CHAIN_ID=84532  # Base Sepolia
-# RECIPE_CONTRACT_ADDRESS=0x...  (from deploy step)
-# AGENT_PRIVATE_KEY=0x...  (wallet with GRADER_ROLE)
-# BACKEND_API_URL=http://localhost:3001
+# Check if frontend has environment configuration
+cat .env.example  # If exists, use it as reference
 ```
 
-### 4.2 Fund Agent Wallet
+### 4.2 Configure Wallet Connection
 
-The agent wallet needs ETH for gas:
+Ensure MetaMask is installed and configured:
 
-```bash
-# Get your agent address
-cast wallet address --private-key $AGENT_PRIVATE_KEY
+1. Install MetaMask browser extension
+2. Add Base Sepolia network (ChainID: 84532)
+3. Get testnet ETH from faucet: https://www.alchemy.com/faucets/base-sepolia
 
-# Send 0.01 ETH to it (Base Sepolia testnet)
-# Use a faucet: https://www.alchemy.com/faucets/base-sepolia
-```
-
-### 4.3 Start Agent
+### 4.3 Start Frontend
 
 Make sure backend is running first!
 
 ```bash
-# In agentkit directory
+# In frontend directory
 npm run dev
 ```
 
 **Expected Output:**
 ```
-🤖 Soil2Sauce Recipe Agent starting...
-Initializing Recipe Agent
-Wallet configured { address: '0x...' }
-Storage initialized
-Agent starting { lastProcessedBlock: 0, pollInterval: 15000 }
-Polling for events { fromBlock: ..., toBlock: ... }
+Local:   http://localhost:5173/
+Network: use --host to expose
 ```
+
+Open http://localhost:5173 in your browser and test wallet connection.
 
 ## Test 5: End-to-End Flow
 
-Now test the complete flow from contract → agent → backend → contract:
+Test the complete flow from contract → backend → contract:
 
-### 5.1 Submit a Recipe On-Chain
+### 5.1 Submit a Recipe via Frontend
 
-In a new terminal:
-
+1. Start the frontend development server:
 ```bash
-# Submit recipe using cast
-cast send <RECIPE_SYSTEM_ADDRESS> \
-  "requestRecipe(string,string)" \
-  "Mix flour, sugar, eggs in bowl. Bake at 350F for 30 minutes" \
-  "2 cups flour, 1 cup sugar, 3 eggs, 1 stick butter" \
-  --rpc-url base-sepolia \
-  --private-key <YOUR_WALLET_PRIVATE_KEY>
+cd frontend
+npm run dev
 ```
 
-### 5.2 Watch Agent Logs
+2. Open http://localhost:5173 and navigate to recipe submission
 
-In the agent terminal, you should see:
+3. Fill out recipe form and submit
+
+### 5.2 Watch Backend Logs
+
+In the backend terminal, you should see:
 
 ```
-Found 1 recipe request events
-Recipe request received { recipeId: 1, chef: '0x...', ... }
-Calling evaluation API
-Evaluation received from API { recipeId: 1, grade: 85, revenueRate: 150 }
-Transaction submitted { recipeId: 1, txHash: '0x...' }
-Transaction confirmed { recipeId: 1, blockNumber: ..., gasUsed: ... }
-Recipe processing complete { recipeId: 1 }
+Recipe evaluation request received { description: '...', ingredients: '...' }
+OpenAI Assistant API called
+Evaluation completed { grade: 85, revenueRate: 150 }
+Requesting recipe on blockchain
+Recipe requested on-chain { txHash: '0x...' }
+Minting NFT for recipe { recipeId: 1 }
+NFT minted successfully { tokenId: 1, owner: '0x...' }
 ```
 
-### 5.3 Verify Recipe Was Finalized
+### 5.3 Verify Recipe in Frontend
+
+The frontend should show:
+- Recipe evaluation results
+- Blockchain transaction hash
+- NFT token ID and ownership information
+
+### 5.4 Verify Contract State
 
 ```bash
 # Check if recipe was evaluated
@@ -244,14 +236,6 @@ cast call <RECIPE_SYSTEM_ADDRESS> \
 
 **Expected**: Recipe should show evaluated=true and NFT should be owned by the chef
 
-### 5.4 Check Local Database
-
-```bash
-cat agentkit/data/processed.json
-```
-
-**Expected**: Should show recipe 1 as processed
-
 ## Troubleshooting
 
 ### Backend Issues
@@ -265,21 +249,17 @@ cat agentkit/data/processed.json
 - Verify assistant instructions are correct
 - Check API key permissions
 
-### Agent Issues
+### Frontend Issues
 
-**"Agent wallet not reachable"**
-- Verify BASE_RPC_URL is correct
-- Check Alchemy/Infura dashboard for rate limits
+**"Wallet connection failed"**
+- Ensure MetaMask is installed and configured
+- Switch to Base Sepolia network
+- Check wallet has ETH for gas fees
 
 **"Transaction failed"**
-- Ensure agent wallet has ETH for gas
-- Verify agent has GRADER_ROLE
-- Check if recipe already processed
-
-**"Backend API not reachable"**
-- Make sure backend server is running
-- Verify BACKEND_API_URL in agent .env
-- Check firewall/network settings
+- Verify wallet has sufficient ETH for gas
+- Check contract addresses are correct
+- Ensure Base Sepolia network is selected
 
 ### Contract Issues
 
@@ -298,24 +278,23 @@ cat agentkit/data/processed.json
 ✅ Backend health check responds
 ✅ Backend evaluates recipe and returns valid JSON
 ✅ Contracts deploy successfully
-✅ Agent wallet has GRADER_ROLE
-✅ Agent starts and polls for events
-✅ Recipe submission triggers agent processing
-✅ Agent calls backend API
-✅ Agent submits transaction on-chain
+✅ Frontend connects to wallet successfully
+✅ Recipe submission via frontend works
+✅ Backend processes recipe evaluation
+✅ Backend submits blockchain transactions
 ✅ Recipe is marked as evaluated
 ✅ NFT is minted to chef
-✅ Local database tracks processed recipe
+✅ Frontend displays results correctly
 
 ## Performance Benchmarks
 
 **Expected Timing:**
-- Recipe submission: ~2-5 seconds
-- Agent detects event: 0-15 seconds (poll interval)
-- Backend evaluation: 5-10 seconds (OpenAI)
-- Transaction submission: 2-5 seconds
+- Frontend recipe submission: ~2-5 seconds
+- Backend AI evaluation: 5-10 seconds (OpenAI)
+- Blockchain recipe request: 2-5 seconds
 - Transaction confirmation: 2-5 seconds
-- **Total: ~15-45 seconds** from submission to finalization
+- NFT minting: 2-5 seconds
+- **Total: ~15-35 seconds** from submission to NFT minting
 
 ## Next Steps
 
@@ -331,8 +310,8 @@ Once all tests pass:
 
 If you encounter issues:
 
-1. Check logs in `agentkit/logs/agent.log`
-2. Review backend console output
+1. Review backend console output for detailed logs
+2. Check browser console for frontend errors
 3. Check OpenAI dashboard for assistant runs
 4. Verify all environment variables are set correctly
-5. Ensure all services are running
+5. Ensure backend and frontend services are running

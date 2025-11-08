@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { CONTRACT_ADDRESSES } from '../wagmi.ts';
-import RecipeSystemJSON from '../contracts/RecipeSystem.json';
+import RecipeSystemABI from '../contracts/RecipeSystem.json';
 import './RecipeResearch.css';
-
-const RecipeSystemABI = RecipeSystemJSON.abi;
 
 interface Ingredient {
   name: string;
@@ -66,26 +64,50 @@ export default function RecipeResearch() {
   };
 
   const handleResearch = async () => {
+    console.log('🔍 RecipeResearch: Starting recipe research:', {
+      timestamp: new Date().toISOString(),
+      walletConnected: isConnected,
+      walletAddress: address,
+      instructionsLength: cookingInstructions.trim().length,
+    });
+
     if (!isConnected || !address) {
+      console.warn('❌ RecipeResearch: Wallet not connected for research');
       setError('Please connect your wallet first');
       return;
     }
 
     if (!cookingInstructions.trim()) {
+      console.warn('❌ RecipeResearch: No cooking instructions provided');
       setError('Please provide cooking instructions');
       return;
     }
 
     const filledIngredients = ingredients.filter(ing => ing.name && ing.amount);
+    console.log('📋 RecipeResearch: Ingredients prepared:', {
+      totalIngredients: ingredients.length,
+      filledIngredients: filledIngredients.length,
+      ingredientsList: filledIngredients.map(ing => `${ing.amount} ${ing.name}`),
+    });
+
     if (filledIngredients.length === 0) {
+      console.warn('❌ RecipeResearch: No valid ingredients provided');
       setError('Please add at least one ingredient');
       return;
     }
 
     setLoading(true);
     setError('');
+    const researchStartTime = Date.now();
+    
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:3001';
+      console.log('🤖 RecipeResearch: Calling AI research API:', {
+        endpoint: `${backendUrl}/api/recipes/research`,
+        ingredientsCount: filledIngredients.length,
+        instructionsPreview: cookingInstructions.substring(0, 50) + '...',
+      });
+
       const response = await fetch(`${backendUrl}/api/recipes/research`, {
         method: 'POST',
         headers: {
@@ -97,13 +119,29 @@ export default function RecipeResearch() {
         })
       });
 
+      console.log('📡 RecipeResearch: Research API response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
       if (!response.ok) {
+        console.error('❌ RecipeResearch: Research API failed:', response.statusText);
         throw new Error(`Failed to research recipe: ${response.statusText}`);
       }
 
       const data = await response.json();
+      const researchTime = Date.now() - researchStartTime;
+      console.log('✅ RecipeResearch: Recipe research completed:', {
+        processingTimeMs: researchTime,
+        recipeDescription: data.recipe?.description?.substring(0, 100) + '...',
+        hasRecipe: !!data.recipe,
+      });
+      
       setResearched(data.recipe);
     } catch (err) {
+      const researchTime = Date.now() - researchStartTime;
+      console.error('❌ RecipeResearch: Research failed after', researchTime, 'ms:', err);
       setError(err instanceof Error ? err.message : 'Failed to research recipe');
       setResearched(null);
     } finally {
@@ -112,28 +150,34 @@ export default function RecipeResearch() {
   };
 
   const handleSubmitToBlockchain = async () => {
-    console.log('🚀 handleSubmitToBlockchain called');
-    console.log('Researched recipe:', researched);
+    console.log('🚀 RecipeResearch: Starting blockchain submission:', {
+      timestamp: new Date().toISOString(),
+      walletConnected: isConnected,
+      walletAddress: address,
+      chainId: chain?.id,
+      hasResearchedRecipe: !!researched,
+    });
 
     if (!researched) {
-      console.log('❌ No researched recipe');
+      console.warn('❌ RecipeResearch: No researched recipe available');
       return;
     }
 
     if (!isConnected || !address) {
+      console.warn('❌ RecipeResearch: Wallet not connected');
       setError('Please connect your wallet first');
-      console.log('❌ Wallet not connected');
       return;
     }
 
     if (chain?.id !== 84532) {
+      console.warn('❌ RecipeResearch: Wrong network. Expected: 84532, Got:', chain?.id);
       setError('Please switch to Base Sepolia network to submit');
-      console.log('❌ Wrong network:', chain?.id);
       return;
     }
 
     setError('');
 
+    const submissionStartTime = Date.now();
     try {
       // Format ingredients for blockchain submission
       const filledIngredients = ingredients.filter(ing => ing.name && ing.amount);
@@ -141,10 +185,12 @@ export default function RecipeResearch() {
         .map(ing => `${ing.amount} ${ing.name}`)
         .join(', ');
 
-      console.log('📝 Submitting AI-generated recipe to blockchain:', {
+      console.log('📝 RecipeResearch: Submitting AI-generated recipe to blockchain:', {
         dishDescription: researched.description,
-        ingredients: ingredientsStr,
-        contract: CONTRACT_ADDRESSES.recipeSystem
+        ingredientsStr,
+        ingredientsCount: filledIngredients.length,
+        contract: CONTRACT_ADDRESSES.recipeSystem,
+        userWallet: address,
       });
 
       // Submit AI-generated dish description and ingredients to blockchain
@@ -155,9 +201,10 @@ export default function RecipeResearch() {
         args: [researched.description, ingredientsStr],
       });
 
-      console.log('✅ writeContract called successfully');
+      console.log('✅ RecipeResearch: writeContract called successfully');
     } catch (err) {
-      console.error('❌ Error in handleSubmitToBlockchain:', err);
+      const submissionTime = Date.now() - submissionStartTime;
+      console.error('❌ RecipeResearch: Error after', submissionTime, 'ms:', err);
       setError(err instanceof Error ? err.message : 'Failed to submit recipe');
     }
   };
@@ -181,8 +228,19 @@ export default function RecipeResearch() {
               rel="noopener noreferrer"
               className="view-tx-btn"
             >
-              View on BaseScan →
+              🔗 View Transaction on BaseScan →
             </a>
+          </div>
+          <div style={{
+            marginTop: '1.5rem',
+            padding: '1rem',
+            background: '#e7f3ff',
+            border: '1px solid #a8d4ff',
+            borderRadius: '8px'
+          }}>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: '#1a1a1a' }}>
+              💡 <strong>Next Steps:</strong> After evaluation, check <strong>"My Recipes"</strong> to view your NFT on BaseScan and access the IPFS metadata!
+            </p>
           </div>
           <button
             className="submit-another-btn"
